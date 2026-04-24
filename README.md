@@ -1,0 +1,313 @@
+# Stellar Lending Protocol
+
+A fully decentralized lending protocol built on the Stellar network using Soroban smart contracts (Rust) and a React/TypeScript frontend.
+
+**Rise In Journey to Mastery — Level 4 (Green Belt)**
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        React Frontend                           │
+│  Dashboard │ Deposit │ Borrow │ Repay │ Withdraw │ Liquidate   │
+│                  @stellar/freighter-api                         │
+│                  @stellar/stellar-sdk (rpc)                     │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ Soroban RPC
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Stellar Testnet                               │
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐                    │
+│  │ collateral_token│    │   debt_token    │                    │
+│  │  (SEP-41 cTOKEN)│    │ (SEP-41 dTOKEN) │                    │
+│  │                 │    │  minter: pool   │                    │
+│  └────────┬────────┘    └────────┬────────┘                    │
+│           │                      │                             │
+│           └──────────┬───────────┘                             │
+│                      ▼                                          │
+│           ┌─────────────────────┐                              │
+│           │    lending_pool     │                              │
+│           │  collateral_ratio:  │                              │
+│           │       150%          │                              │
+│           │  liq_threshold:     │                              │
+│           │       120%          │                              │
+│           │  liq_bonus: 5%      │                              │
+│           └─────────────────────┘                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Smart Contracts | Rust + soroban-sdk 22.x |
+| Frontend | React 19 + TypeScript + Vite |
+| Wallet | Freighter (@stellar/freighter-api) |
+| Stellar SDK | @stellar/stellar-sdk (latest) |
+| Styling | Tailwind CSS v4 (mobile-first) |
+| CI/CD | GitHub Actions → Netlify |
+| Network | Stellar Testnet |
+
+---
+
+## Prerequisites
+
+- **Rust** (stable) with `wasm32v1-none` target
+  ```bash
+  rustup target add wasm32v1-none
+  ```
+- **stellar-cli** (latest)
+  ```bash
+  cargo install stellar-cli --locked
+  ```
+- **Node.js 20+** and npm
+- **Freighter Wallet** browser extension — [freighter.app](https://freighter.app)
+
+---
+
+## Local Setup
+
+```bash
+# Clone the repository
+git clone <repo-url>
+cd stellar-lending
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+```
+
+---
+
+## Running Tests
+
+```bash
+# From the project root (stellar-lending/)
+cargo test
+
+# Run tests for a specific contract
+cargo test -p collateral_token
+cargo test -p debt_token
+cargo test -p lending_pool
+```
+
+**Test coverage:**
+- `collateral_token`: 5 tests (mint/burn, transfer, approve/transfer_from, unauthorized mint, metadata)
+- `debt_token`: 4 tests (mint/burn, transfer, set_minter, metadata)
+- `lending_pool`: 12 tests (initialize, deposit, borrow within/exceeds limit, repay, repay exceeds, withdraw, withdraw undercollateralized, liquidate healthy/unhealthy, full lifecycle, health factor)
+
+**Total: 21 tests, all passing ✓**
+
+---
+
+## Building Contracts
+
+```bash
+# From the project root
+stellar contract build
+```
+
+Output WASMs:
+- `target/wasm32v1-none/release/collateral_token.wasm` (6.2 KB)
+- `target/wasm32v1-none/release/debt_token.wasm` (6.7 KB)
+- `target/wasm32v1-none/release/lending_pool.wasm` (10.4 KB)
+
+---
+
+## Deploying to Testnet
+
+```bash
+# Make the script executable (first time only)
+chmod +x scripts/deploy.sh
+
+# Run the full deployment
+./scripts/deploy.sh
+```
+
+The script will:
+1. Generate/load a `deployer` keypair and fund it from Friendbot
+2. Build all 3 contracts
+3. Deploy and initialize `collateral_token` (cTOKEN)
+4. Deploy and initialize `debt_token` (dTOKEN)
+5. Deploy and initialize `lending_pool` (150% ratio, 120% threshold, 5% bonus)
+6. Set `lending_pool` as the authorized minter on `debt_token`
+7. Mint 1,000,000,000 cTOKEN to the deployer for testing
+8. Save all contract IDs to `.env` and `frontend/.env`
+
+---
+
+## Contract Addresses (Testnet)
+
+> Fill these in after running `scripts/deploy.sh`
+
+| Contract | Address |
+|----------|---------|
+| collateral (XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
+| debt_token (dTOKEN) | `CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5` |
+| lending_pool | `CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ` |
+
+Deployer: `GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6`
+
+> Collateral is native XLM via the Stellar Asset Contract — no custom token needed.
+
+---
+
+## Running the Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173)
+
+---
+
+## Using the dApp
+
+1. **Install Freighter** — [freighter.app](https://freighter.app) and switch to Testnet
+2. **Connect Wallet** — click "Connect Freighter" in the top-right
+3. **Get test tokens** — run `scripts/deploy.sh` which mints cTOKEN to the deployer
+4. **Deposit** — go to `/deposit`, enter an amount of cTOKEN, approve + deposit
+5. **Borrow** — go to `/borrow`, borrow up to 66.6% of your collateral value in dTOKEN
+6. **Repay** — go to `/repay`, repay any amount of your dTOKEN debt
+7. **Withdraw** — go to `/withdraw`, withdraw collateral (must stay above 150% ratio)
+8. **Liquidate** — go to `/liquidate`, look up any address with health factor < 120%
+
+### Health Factor Color Coding
+
+| Color | Range | Status |
+|-------|-------|--------|
+| 🟢 Green | ≥ 150% | Safe |
+| 🟡 Yellow | 120–149% | Warning |
+| 🔴 Red | < 120% | Danger / Liquidatable |
+
+---
+
+## Contract Function Signatures
+
+### collateral_token
+```rust
+fn initialize(env, admin: Address, name: String, symbol: String, decimals: u32)
+fn mint(env, to: Address, amount: i128)          // admin only
+fn burn(env, from: Address, amount: i128)
+fn transfer(env, from: Address, to: Address, amount: i128)
+fn transfer_from(env, spender: Address, from: Address, to: Address, amount: i128)
+fn approve(env, from: Address, spender: Address, amount: i128, expiration_ledger: u32)
+fn allowance(env, from: Address, spender: Address) -> i128
+fn balance(env, id: Address) -> i128
+fn decimals(env) -> u32
+fn name(env) -> String
+fn symbol(env) -> String
+fn total_supply(env) -> i128
+```
+
+### debt_token
+```rust
+fn initialize(env, admin: Address, name: String, symbol: String, decimals: u32)
+fn set_minter(env, minter: Address)              // admin only
+fn mint(env, to: Address, amount: i128)          // minter (lending_pool) only
+fn burn(env, from: Address, amount: i128)        // minter (lending_pool) only
+fn transfer(env, from: Address, to: Address, amount: i128)
+fn transfer_from(env, spender: Address, from: Address, to: Address, amount: i128)
+fn approve(env, from: Address, spender: Address, amount: i128, expiration_ledger: u32)
+fn allowance(env, from: Address, spender: Address) -> i128
+fn balance(env, id: Address) -> i128
+fn decimals(env) -> u32
+fn name(env) -> String
+fn symbol(env) -> String
+fn total_supply(env) -> i128
+```
+
+### lending_pool
+```rust
+fn initialize(env, admin: Address, collateral_token: Address, debt_token: Address,
+              collateral_ratio: u32, liquidation_threshold: u32, liquidation_bonus: u32)
+fn deposit_collateral(env, user: Address, amount: i128)
+fn borrow(env, user: Address, amount: i128)
+fn repay(env, user: Address, amount: i128)
+fn withdraw_collateral(env, user: Address, amount: i128)
+fn liquidate(env, liquidator: Address, borrower: Address, repay_amount: i128)
+fn get_position(env, user: Address) -> Position
+fn get_health_factor(env, user: Address) -> u32
+fn get_config(env) -> LendingConfig
+```
+
+---
+
+## Level 4 Green Belt Requirements Checklist
+
+- [x] **Soroban smart contracts in Rust** — 3 contracts (collateral_token, debt_token, lending_pool)
+- [x] **SEP-41 compliant tokens** — both token contracts implement the full SEP-41 interface
+- [x] **Inter-contract calls** — lending_pool calls token contracts via custom client interfaces
+- [x] **Access control** — `require_auth()` on all state-changing functions; minter-only mint/burn on debt_token
+- [x] **Core lending mechanics** — deposit, borrow, repay, withdraw, liquidate
+- [x] **Over-collateralization** — 150% collateral ratio enforced
+- [x] **Liquidation** — health factor check, 5% liquidation bonus
+- [x] **Checked arithmetic** — all math uses `checked_add/sub/mul/div` with explicit panics
+- [x] **Events** — all state changes emit events via `env.events().publish()`
+- [x] **Comprehensive tests** — 21 unit tests covering all functions and edge cases
+- [x] **WASM build** — all 3 contracts compile to optimized WASM
+- [x] **React + TypeScript frontend** — 6 pages, Freighter wallet integration
+- [x] **Mobile-first responsive design** — Tailwind CSS, works on all screen sizes
+- [x] **Deployment script** — `scripts/deploy.sh` handles full testnet deployment
+- [x] **GitHub Actions CI/CD** — contract tests + frontend build + Netlify deploy
+- [x] **Stellar Testnet** — configured for `https://soroban-testnet.stellar.org`
+
+---
+
+## Project Structure
+
+```
+stellar-lending/
+├── Cargo.toml                          # Workspace manifest
+├── contracts/
+│   ├── collateral_token/
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs                  # SEP-41 cTOKEN contract
+│   │       └── test.rs                 # 5 unit tests
+│   ├── debt_token/
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs                  # SEP-41 dTOKEN (minter-controlled)
+│   │       └── test.rs                 # 4 unit tests
+│   └── lending_pool/
+│       ├── Cargo.toml
+│       └── src/
+│           ├── lib.rs                  # Core lending protocol
+│           └── test.rs                 # 12 unit tests
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── WalletConnect.tsx
+│   │   │   ├── PositionCard.tsx
+│   │   │   ├── HealthFactorGauge.tsx
+│   │   │   └── TransactionModal.tsx
+│   │   ├── context/
+│   │   │   └── WalletContext.tsx
+│   │   ├── lib/
+│   │   │   └── ContractInteraction.ts  # All Soroban call helpers
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Deposit.tsx
+│   │   │   ├── Borrow.tsx
+│   │   │   ├── Repay.tsx
+│   │   │   ├── Withdraw.tsx
+│   │   │   └── Liquidate.tsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+├── scripts/
+│   └── deploy.sh                       # Full testnet deployment
+├── .github/
+│   └── workflows/
+│       └── ci.yml                      # CI/CD pipeline
+└── README.md
+```
