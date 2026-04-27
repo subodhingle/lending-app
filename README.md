@@ -143,7 +143,16 @@ The script will:
 
 ---
 
-## Contract Addresses (Testnet)
+## Feedback & Fixes
+
+| # | Feedback | Fix | Commit |
+|---|----------|-----|--------|
+| 1 | Liquidate tab doesn't work — shows "cTOKEN" instead of XLM | Replaced all `cTOKEN` labels with `XLM` in the Liquidate page | [`104d2eb`](https://github.com/subodhingle/lending-app/commit/104d2eb) |
+| 2 | Health factor goes up to 10000% — should be 0–100 range | Capped gauge display at 300% fill, label shows `999%+` for very safe positions | [`dcab8ba`](https://github.com/subodhingle/lending-app/commit/dcab8ba) |
+| 3 | Home page looks too bland, nothing happening | Added two-column hero with live position preview card, health factor bar, and protocol stats | [`a5ee1e5`](https://github.com/subodhingle/lending-app/commit/a5ee1e5) |
+| 4 | UI feels like a mobile UI on desktop — too much space left/right | Widened all app pages from `max-w-lg` to `max-w-7xl`, added two-column form+explainer layout | [`27b0b56`](https://github.com/subodhingle/lending-app/commit/27b0b56) |
+
+---
 
 All contracts are live on **Stellar Testnet**. View them on [Stellar Expert](https://stellar.expert/explorer/testnet).
 
