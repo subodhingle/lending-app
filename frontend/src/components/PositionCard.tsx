@@ -63,7 +63,7 @@ export function PositionCard({ position, healthFactor, loading }: PositionCardPr
         <div className="flex items-center gap-2">
           <span className="text-xs text-[#6b6b6b]">Health Factor:</span>
           <span className={`text-sm font-bold ${healthColor}`}>
-            {healthFactor}%
+            {healthFactor > 999 ? '999%+' : `${healthFactor}%`}
           </span>
         </div>
       )}
