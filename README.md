@@ -152,6 +152,9 @@ The script will:
 | 3 | Home page looks too bland, nothing happening | Added two-column hero with live position preview card, health factor bar, and protocol stats | [`a5ee1e5`](https://github.com/subodhingle/lending-app/commit/a5ee1e5) |
 | 4 | UI feels like a mobile UI on desktop — too much space left/right | Widened all app pages from `max-w-lg` to `max-w-7xl`, added two-column form+explainer layout | [`27b0b56`](https://github.com/subodhingle/lending-app/commit/27b0b56) |
 
+📊 **Feedback log (Google Sheets):** [View spreadsheet](https://docs.google.com/spreadsheets/d/1QFSWXMOvzUQR49S_WdDrzR4t6utEOxseFBiLfJq4UTU/edit?usp=sharing)
+📝 **Submit feedback:** [Google Form](https://forms.gle/PEMVM93nFcWdtDMr6)
+
 ---
 
 All contracts are live on **Stellar Testnet**. View them on [Stellar Expert](https://stellar.expert/explorer/testnet).
