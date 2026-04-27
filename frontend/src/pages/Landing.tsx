@@ -100,32 +100,79 @@ export function Landing() {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-5 pt-20 pb-16 md:pt-28 md:pb-24">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-white border border-[#e2e1d9] rounded-full px-3 py-1 text-xs text-[#6b6b6b] mb-8 fade-up">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-            Live on Stellar Testnet
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-white border border-[#e2e1d9] rounded-full px-3 py-1 text-xs text-[#6b6b6b] mb-8 fade-up">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
+              Live on Stellar Testnet
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95] mb-6 fade-up-2">
+              Borrow against<br />
+              <span className="text-[#6b6b6b]">your XLM.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-[#6b6b6b] leading-relaxed max-w-xl mb-10 fade-up-3">
+              A non-custodial lending protocol on Stellar. Deposit native XLM,
+              borrow dTOKEN, manage your position — all on-chain, all transparent.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 fade-up-3">
+              <Link to="/app"
+                className="bg-[#141414] text-white font-semibold px-6 py-3 rounded-full hover:bg-[#333] transition-colors text-sm">
+                Launch App
+              </Link>
+              <a href="#how-it-works"
+                className="border border-[#e2e1d9] text-[#141414] font-medium px-6 py-3 rounded-full hover:bg-white transition-colors text-sm">
+                How it works
+              </a>
+            </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95] mb-6 fade-up-2">
-            Borrow against<br />
-            <span className="text-[#6b6b6b]">your XLM.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-[#6b6b6b] leading-relaxed max-w-xl mb-10 fade-up-3">
-            A non-custodial lending protocol on Stellar. Deposit native XLM,
-            borrow dTOKEN, manage your position — all on-chain, all transparent.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 fade-up-3">
-            <Link
-              to="/app"
-              className="bg-[#141414] text-white font-semibold px-6 py-3 rounded-full hover:bg-[#333] transition-colors text-sm"
-            >
-              Launch App
-            </Link>
-            <a
-              href="#how-it-works"
-              className="border border-[#e2e1d9] text-[#141414] font-medium px-6 py-3 rounded-full hover:bg-white transition-colors text-sm"
-            >
-              How it works
-            </a>
+
+          {/* Live position preview card */}
+          <div className="fade-up-3 hidden lg:block">
+            <div className="bg-white border border-[#e2e1d9] rounded-3xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-widest">Sample Position</p>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">Safe</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="bg-[#f7f6f2] rounded-2xl p-4">
+                  <p className="text-xs text-[#6b6b6b] mb-1">Collateral</p>
+                  <p className="text-2xl font-black text-[#141414]">300</p>
+                  <p className="text-xs text-[#6b6b6b]">XLM deposited</p>
+                </div>
+                <div className="bg-[#f7f6f2] rounded-2xl p-4">
+                  <p className="text-xs text-[#6b6b6b] mb-1">Debt</p>
+                  <p className="text-2xl font-black text-[#141414]">150</p>
+                  <p className="text-xs text-[#6b6b6b]">dTOKEN borrowed</p>
+                </div>
+              </div>
+              {/* Health factor bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-xs text-[#6b6b6b] mb-2">
+                  <span>Health Factor</span>
+                  <span className="font-bold text-green-700">200%</span>
+                </div>
+                <div className="h-2.5 bg-[#f0efe8] rounded-full overflow-hidden">
+                  <div className="h-full w-2/3 bg-green-500 rounded-full" />
+                </div>
+                <div className="flex justify-between text-[10px] text-[#9b9b9b] mt-1">
+                  <span>0%</span>
+                  <span className="text-red-400">120% liquidation</span>
+                  <span>300%+</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: 'Ratio', value: '150%' },
+                  { label: 'Threshold', value: '120%' },
+                  { label: 'Bonus', value: '+5%' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-[#f7f6f2] rounded-xl py-2">
+                    <p className="text-sm font-bold text-[#141414]">{value}</p>
+                    <p className="text-[10px] text-[#6b6b6b]">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
