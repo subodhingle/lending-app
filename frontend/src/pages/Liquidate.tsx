@@ -157,7 +157,7 @@ export function Liquidate() {
                 <div className="flex justify-between">
                   <span className="text-[#6b6b6b]">Collateral</span>
                   <span className="font-semibold text-[#1a1a1a]">
-                    {formatAmount(borrowerInfo.position.collateral_deposited)} cTOKEN
+                    {formatAmount(borrowerInfo.position.collateral_deposited)} XLM
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -188,7 +188,7 @@ export function Liquidate() {
               <h2 className="font-semibold text-[#1a1a1a]">Execute Liquidation</h2>
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <p className="text-xs text-amber-700">
-                  You will repay dTOKEN debt and receive cTOKEN collateral + 5% bonus.
+                  You will repay dTOKEN debt and receive XLM collateral + 5% bonus.
                   You must hold enough dTOKEN in your wallet.
                 </p>
               </div>
@@ -224,7 +224,7 @@ export function Liquidate() {
                     <div className="flex justify-between">
                       <span className="text-[#6b6b6b]">Collateral seized (+5%)</span>
                       <span className="font-medium text-green-700">
-                        {formatAmount(collateralToSeize)} cTOKEN
+                        {formatAmount(collateralToSeize)} XLM
                       </span>
                     </div>
                   </div>
