@@ -55,7 +55,7 @@ export function Dashboard() {
   ]
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div className="py-8 space-y-6">
       <div>
         <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-widest mb-2">Overview</p>
         <h1 className="text-3xl font-black tracking-tight text-[#141414]">Dashboard</h1>

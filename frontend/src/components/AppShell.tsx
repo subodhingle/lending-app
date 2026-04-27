@@ -15,10 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f7f6f2]">
-      {/* Navbar */}
       <header className="sticky top-0 z-40 bg-[#f7f6f2]/90 backdrop-blur-md border-b border-[#e2e1d9]">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-          {/* Logo → back to landing */}
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 bg-[#141414] rounded-lg flex items-center justify-center">
               <span className="text-white text-[10px] font-black">SL</span>
@@ -28,33 +26,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
-          {/* Nav */}
           <nav className="flex items-center gap-0.5 overflow-x-auto flex-1 justify-center">
             {navLinks.map((link) => {
               const active = location.pathname === link.to
               return (
-                <Link
-                  key={link.to}
-                  to={link.to}
+                <Link key={link.to} to={link.to}
                   className={`text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
                     active
                       ? 'bg-[#141414] text-white'
-                      : 'text-[#6b6b6b] hover:text-[#141414] hover:bg-[#ebebе4]'
-                  }`}
-                >
+                      : 'text-[#6b6b6b] hover:text-[#141414] hover:bg-[#e8e8e0]'
+                  }`}>
                   {link.label}
                 </Link>
               )
             })}
           </nav>
 
-          <div className="shrink-0">
-            <WalletConnect />
-          </div>
+          <div className="shrink-0"><WalletConnect /></div>
         </div>
       </header>
 
-      <main className="pb-16">{children}</main>
+      <main className="max-w-7xl mx-auto px-6 pb-16">
+        {children}
+      </main>
     </div>
   )
 }
