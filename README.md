@@ -4,6 +4,9 @@ A fully decentralized lending protocol built on the Stellar network using Soroba
 
 **Rise In Journey to Mastery — Level 4 (Green Belt)**
 
+🌐 **Live App:** [https://frontend-ebon-chi-62.vercel.app](https://frontend-ebon-chi-62.vercel.app)
+📦 **GitHub:** [https://github.com/subodhingle/lending-app](https://github.com/subodhingle/lending-app)
+
 ---
 
 ## Architecture
@@ -142,17 +145,28 @@ The script will:
 
 ## Contract Addresses (Testnet)
 
-> Fill these in after running `scripts/deploy.sh`
+All contracts are live on **Stellar Testnet**. View them on [Stellar Expert](https://stellar.expert/explorer/testnet).
 
-| Contract | Address |
-|----------|---------|
-| collateral (XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
-| debt_token (dTOKEN) | `CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5` |
-| lending_pool | `CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ` |
+| Contract | Address | Stellar Expert |
+|----------|---------|----------------|
+| Collateral (XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View ↗](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
+| debt_token (dTOKEN) | `CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5` | [View ↗](https://stellar.expert/explorer/testnet/contract/CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5) |
+| lending_pool | `CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ` | [View ↗](https://stellar.expert/explorer/testnet/contract/CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ) |
 
-Deployer: `GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6`
+**Deployer:** [`GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6`](https://stellar.expert/explorer/testnet/account/GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6)
 
-> Collateral is native XLM via the Stellar Asset Contract — no custom token needed.
+> The collateral token is the **native XLM Stellar Asset Contract (SAC)** — every Freighter testnet wallet already has XLM from Friendbot. No custom token minting required.
+
+### Protocol Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| Collateral Ratio | 150% | Minimum collateral required per unit borrowed |
+| Liquidation Threshold | 120% | Health factor below which a position is liquidatable |
+| Liquidation Bonus | 5% | Extra collateral reward for liquidators |
+| Collateral Asset | XLM (native) | Stellar Asset Contract wrapping native XLM |
+| Debt Asset | dTOKEN | Custom SEP-41 token minted/burned by the pool |
+| Network | Stellar Testnet | Soroban RPC: `https://soroban-testnet.stellar.org` |
 
 ---
 
