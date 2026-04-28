@@ -35,15 +35,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install stellar-cli
-        run: cargo install stellar-cli --locked
+      - name: Install stellar-cli (pre-built binary)
+        run: |
+          curl -sSL https://github.com/stellar/stellar-cli/releases/download/v25.1.0/stellar-cli-25.1.0-x86_64-unknown-linux-gnu.tar.gz \
+            | tar -xz -C /usr/local/bin stellar
+          stellar --version
 
       - name: Run all contract tests
-        working-directory: .
         run: cargo test --all
 
       - name: Build all contracts (verify WASM compilation)
-        working-directory: .
         run: stellar contract build
 
       - name: Upload WASM artifacts
@@ -74,13 +75,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Create placeholder .env for build
+      - name: Create .env with real contract IDs
         working-directory: frontend
         run: |
           cat > .env << 'EOF'
-          VITE_COLLATERAL_TOKEN_ID=PLACEHOLDER_COLLATERAL_TOKEN_ID
-          VITE_DEBT_TOKEN_ID=PLACEHOLDER_DEBT_TOKEN_ID
-          VITE_LENDING_POOL_ID=PLACEHOLDER_LENDING_POOL_ID
+          VITE_COLLATERAL_TOKEN_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
+          VITE_DEBT_TOKEN_ID=CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5
+          VITE_LENDING_POOL_ID=CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ
           VITE_NETWORK=testnet
           VITE_RPC_URL=https://soroban-testnet.stellar.org
           EOF
@@ -96,29 +97,31 @@ jobs:
           path: frontend/dist
           retention-days: 7
 
-  # ── Job 3: Deploy to Netlify (push to main only) ────────────────────────────
+  # ── Job 3: Deploy to Vercel (push to main only) ─────────────────────────────
   deploy:
-    name: Deploy to Netlify
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
     needs: frontend-build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3.0
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          publish-dir: './dist'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions - ${{ github.sha }}"
-          enable-pull-request-comment: true
-          enable-commit-comment: true
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        working-directory: frontend
+        run: |
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
