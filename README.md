@@ -4,19 +4,34 @@ A fully decentralized lending protocol built on the Stellar network using Soroba
 
 **Rise In Journey to Mastery — Level 4 (Green Belt)**
 
-🌐 **Live App:** [https://frontend-ebon-chi-62.vercel.app](https://frontend-ebon-chi-62.vercel.app)
+🌐 **Live App:** [https://frontend-five-ochre-90.vercel.app](https://frontend-five-ochre-90.vercel.app)
 📦 **GitHub:** [https://github.com/subodhingle/lending-app](https://github.com/subodhingle/lending-app)
+
+---
+
+## What was added after the review
+
+The following improvements were made in response to reviewer feedback:
+
+- **Interest rate model** — 5% APR (configurable), accrues per Stellar ledger (~5s), compounds on every borrow/repay/deposit/withdraw interaction
+- **Price oracle** — admin-settable XLM/USD price feed; health factor and borrow limits are now calculated in USD terms, not raw token ratios
+- **USD-denominated health factor** — positions are evaluated against the real dollar value of collateral, making liquidation logic production-realistic
+- **`get_position_details`** — new contract function returning collateral USD value, accrued interest, and USD health factor in a single call
+- **`set_price` / `set_interest_rate`** — admin functions to update oracle price and interest rate on-chain
+- **Liquidate tab fixed** — was incorrectly showing `cTOKEN` instead of `XLM`; collateral labels corrected throughout
+- **Health factor display fixed** — raw contract value (e.g. 10000) was showing as 10000%; now capped and displayed correctly
+- **Desktop layout** — all app pages widened from mobile-width (`max-w-lg`) to full desktop layout (`max-w-7xl`) with two-column form + explainer design
+- **Landing page** — hero section redesigned with a live position preview card showing protocol mechanics visually
 
 ---
 
 ## Screenshots
 
-| Landing Page | Dashboard | Deposit |
-|---|---|---|
-| ![Landing](https://frontend-ebon-chi-62.vercel.app) | ![Dashboard](/app) | ![Deposit](/app/deposit) |
+<img width="1282" height="873" alt="Landing Page" src="https://github.com/user-attachments/assets/26f855d7-42e3-4456-90a6-7a27e6209305" />
 
-> **Live demo:** [https://frontend-ebon-chi-62.vercel.app](https://frontend-ebon-chi-62.vercel.app)
-> Connect your Freighter wallet (set to Stellar Testnet) to interact with the live contracts.
+<img width="1281" height="863" alt="Dashboard" src="https://github.com/user-attachments/assets/95d16f66-2a0b-4ee5-a2e3-1c1fd313a0bf" />
+
+<img width="1273" height="875" alt="App Pages" src="https://github.com/user-attachments/assets/153137ec-9366-4576-91c6-d3acbbadb2f4" />
 
 ---
 
