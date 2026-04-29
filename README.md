@@ -26,12 +26,12 @@ The following improvements were made in response to reviewer feedback:
 ---
 
 ## Screenshots
-
-<img width="1282" height="873" alt="Landing Page" src="https://github.com/user-attachments/assets/26f855d7-42e3-4456-90a6-7a27e6209305" />
-
-<img width="1281" height="863" alt="Dashboard" src="https://github.com/user-attachments/assets/95d16f66-2a0b-4ee5-a2e3-1c1fd313a0bf" />
-
-<img width="1273" height="875" alt="App Pages" src="https://github.com/user-attachments/assets/153137ec-9366-4576-91c6-d3acbbadb2f4" />
+<img width="1280" height="849" alt="Screenshot 2026-04-24 at 12 01 17 PM" src="https://github.com/user-attachments/assets/8bf52f52-087f-4b24-811c-eda0cfac6828" />
+<img width="1257" height="843" alt="Screenshot 2026-04-24 at 12 00 42 PM" src="https://github.com/user-attachments/assets/f71678c9-f835-4b68-b8dd-1129de0202ca" />
+<img width="1251" height="863" alt="Screenshot 2026-04-24 at 12 00 53 PM" src="https://github.com/user-attachments/assets/d144cdd8-f3e1-48d7-97db-85ddc07f0008" />
+<img width="404" height="782" alt="Screenshot 2026-04-24 at 11 58 34 AM" src="https://github.com/user-attachments/assets/65264dd2-b2cf-4c4d-a31b-5c441772c98d" />
+<img width="356" height="764" alt="Screenshot 2026-04-24 at 11 58 52 AM" src="https://github.com/user-attachments/assets/6d918b7a-a62b-4598-a226-0546a47c0fd8" />
+<img width="360" height="770" alt="Screenshot 2026-04-24 at 11 59 00 AM" src="https://github.com/user-attachments/assets/79d0b801-0afd-462e-844e-db2775399cfe" />
 
 ---
 
