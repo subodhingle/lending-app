@@ -284,7 +284,7 @@ export function Landing() {
           <div className="flex flex-wrap gap-6 text-sm text-[#6b6b6b]">
             <span>Stellar Testnet</span>
             <span>Soroban Smart Contracts</span>
-            <span>Rise In — Level 4 Green Belt</span>
+            <span>Built on Stellar</span>
           </div>
           <p className="text-xs text-[#9b9b9b]">
             Testnet only. Not for production use.

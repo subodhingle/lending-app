@@ -2,7 +2,7 @@
 
 A fully decentralized lending protocol built on the Stellar network using Soroban smart contracts (Rust) and a React/TypeScript frontend.
 
-**Rise In Journey to Mastery — Level 4 (Green Belt)**
+**Rise In Journey to Mastery**
 
 🌐 **Live App:** [https://frontend-five-ochre-90.vercel.app](https://frontend-five-ochre-90.vercel.app)
 📦 **GitHub:** [https://github.com/subodhingle/lending-app](https://github.com/subodhingle/lending-app)
@@ -291,7 +291,7 @@ fn get_config(env) -> LendingConfig
 
 ---
 
-## Level 4 Green Belt Requirements Checklist
+## Requirements Checklist
 
 - [x] **Soroban smart contracts in Rust** — 3 contracts (collateral_token, debt_token, lending_pool)
 - [x] **SEP-41 compliant tokens** — both token contracts implement the full SEP-41 interface
@@ -300,14 +300,16 @@ fn get_config(env) -> LendingConfig
 - [x] **Core lending mechanics** — deposit, borrow, repay, withdraw, liquidate
 - [x] **Over-collateralization** — 150% collateral ratio enforced
 - [x] **Liquidation** — health factor check, 5% liquidation bonus
+- [x] **Interest rate model** — 5% APR, per-ledger compound accrual
+- [x] **Price oracle** — admin-settable XLM/USD price, USD-denominated health factor
 - [x] **Checked arithmetic** — all math uses `checked_add/sub/mul/div` with explicit panics
 - [x] **Events** — all state changes emit events via `env.events().publish()`
-- [x] **Comprehensive tests** — 21 unit tests covering all functions and edge cases
+- [x] **Comprehensive tests** — 26 unit tests covering all functions and edge cases
 - [x] **WASM build** — all 3 contracts compile to optimized WASM
 - [x] **React + TypeScript frontend** — 6 pages, Freighter wallet integration
 - [x] **Mobile-first responsive design** — Tailwind CSS, works on all screen sizes
 - [x] **Deployment script** — `scripts/deploy.sh` handles full testnet deployment
-- [x] **GitHub Actions CI/CD** — contract tests + frontend build + Netlify deploy
+- [x] **GitHub Actions CI/CD** — contract tests + frontend build
 - [x] **Stellar Testnet** — configured for `https://soroban-testnet.stellar.org`
 
 ---
