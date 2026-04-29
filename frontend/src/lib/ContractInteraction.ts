@@ -214,6 +214,17 @@ export interface LendingConfig {
   collateral_ratio: number
   liquidation_threshold: number
   liquidation_bonus: number
+  interest_rate_bps: number
+  xlm_price_usd: bigint
+}
+
+export interface PositionDetails {
+  collateral_deposited: bigint
+  collateral_usd: bigint
+  debt_borrowed: bigint
+  accrued_interest: bigint
+  health_factor: number
+  xlm_price_usd: bigint
 }
 
 export async function getPosition(userAddress: string): Promise<Position> {
@@ -252,11 +263,7 @@ export async function getHealthFactor(userAddress: string): Promise<number> {
 
 export async function getLendingConfig(): Promise<LendingConfig | null> {
   try {
-    const result = await simulateContract(
-      CONTRACT_IDS.lendingPool,
-      'get_config',
-      []
-    )
+    const result = await simulateContract(CONTRACT_IDS.lendingPool, 'get_config', [])
     if (!result) return null
     const native = scValToNative(result) as Record<string, unknown>
     return {
@@ -266,6 +273,31 @@ export async function getLendingConfig(): Promise<LendingConfig | null> {
       collateral_ratio: Number(native.collateral_ratio),
       liquidation_threshold: Number(native.liquidation_threshold),
       liquidation_bonus: Number(native.liquidation_bonus),
+      interest_rate_bps: Number(native.interest_rate_bps ?? 500),
+      xlm_price_usd: BigInt(String(native.xlm_price_usd ?? 1200000)),
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function getPositionDetails(userAddress: string): Promise<PositionDetails | null> {
+  try {
+    const result = await simulateContract(
+      CONTRACT_IDS.lendingPool,
+      'get_position_details',
+      [addressVal(userAddress)],
+      userAddress
+    )
+    if (!result) return null
+    const native = scValToNative(result) as Record<string, unknown>
+    return {
+      collateral_deposited: BigInt(String(native.collateral_deposited ?? 0)),
+      collateral_usd: BigInt(String(native.collateral_usd ?? 0)),
+      debt_borrowed: BigInt(String(native.debt_borrowed ?? 0)),
+      accrued_interest: BigInt(String(native.accrued_interest ?? 0)),
+      health_factor: Number(native.health_factor ?? 0),
+      xlm_price_usd: BigInt(String(native.xlm_price_usd ?? 1200000)),
     }
   } catch {
     return null

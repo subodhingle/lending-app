@@ -9,6 +9,17 @@ A fully decentralized lending protocol built on the Stellar network using Soroba
 
 ---
 
+## Screenshots
+
+| Landing Page | Dashboard | Deposit |
+|---|---|---|
+| ![Landing](https://frontend-ebon-chi-62.vercel.app) | ![Dashboard](/app) | ![Deposit](/app/deposit) |
+
+> **Live demo:** [https://frontend-ebon-chi-62.vercel.app](https://frontend-ebon-chi-62.vercel.app)
+> Connect your Freighter wallet (set to Stellar Testnet) to interact with the live contracts.
+
+---
+
 ## Architecture
 
 ```

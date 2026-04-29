@@ -7,6 +7,7 @@ import {
   getPosition,
   getHealthFactor,
   getLendingConfig,
+  getPositionDetails,
   getTokenBalance,
   formatAmount,
   contractsDeployed,
@@ -15,6 +16,7 @@ import {
   DEBT_SYMBOL,
   type Position,
   type LendingConfig,
+  type PositionDetails,
 } from '../lib/ContractInteraction'
 
 export function Dashboard() {
@@ -22,6 +24,7 @@ export function Dashboard() {
   const [position, setPosition] = useState<Position>({ collateral_deposited: 0n, debt_borrowed: 0n })
   const [healthFactor, setHealthFactor] = useState(0)
   const [config, setConfig] = useState<LendingConfig | null>(null)
+  const [details, setDetails] = useState<PositionDetails | null>(null)
   const [cBalance, setCBalance] = useState(0n)
   const [dBalance, setDBalance] = useState(0n)
   const [loading, setLoading] = useState(false)
@@ -33,13 +36,15 @@ export function Dashboard() {
       getPosition(address),
       getHealthFactor(address),
       getLendingConfig(),
+      getPositionDetails(address),
       getTokenBalance(CONTRACT_IDS.collateralToken, address),
       getTokenBalance(CONTRACT_IDS.debtToken, address),
     ])
-      .then(([pos, hf, cfg, cb, db]) => {
+      .then(([pos, hf, cfg, det, cb, db]) => {
         setPosition(pos)
         setHealthFactor(hf)
         setConfig(cfg)
+        setDetails(det)
         setCBalance(cb)
         setDBalance(db)
       })
@@ -138,22 +143,59 @@ export function Dashboard() {
 
           {/* Protocol config */}
           {config && (
-            <div className="bg-white border border-[#e0e0d8] rounded-2xl p-5">
-              <h2 className="text-sm font-semibold text-[#6b6b6b] uppercase tracking-wide mb-3">
+            <div className="bg-white border border-[#e2e1d9] rounded-2xl p-5">
+              <h2 className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-widest mb-4">
                 Protocol Parameters
               </h2>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div>
                   <p className="text-xs text-[#6b6b6b]">Collateral Ratio</p>
-                  <p className="font-bold text-[#1a1a1a]">{config.collateral_ratio}%</p>
+                  <p className="font-bold text-[#141414]">{config.collateral_ratio}%</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b6b6b]">Liquidation Threshold</p>
-                  <p className="font-bold text-[#1a1a1a]">{config.liquidation_threshold}%</p>
+                  <p className="text-xs text-[#6b6b6b]">Liq. Threshold</p>
+                  <p className="font-bold text-[#141414]">{config.liquidation_threshold}%</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b6b6b]">Liquidation Bonus</p>
-                  <p className="font-bold text-[#1a1a1a]">{config.liquidation_bonus}%</p>
+                  <p className="text-xs text-[#6b6b6b]">Liq. Bonus</p>
+                  <p className="font-bold text-[#141414]">{config.liquidation_bonus}%</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">Interest Rate (APR)</p>
+                  <p className="font-bold text-[#141414]">{(config.interest_rate_bps / 100).toFixed(2)}%</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">XLM Price (Oracle)</p>
+                  <p className="font-bold text-[#141414]">${(Number(config.xlm_price_usd) / 10_000_000).toFixed(4)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Position USD details */}
+          {details && details.debt_borrowed > 0n && (
+            <div className="bg-white border border-[#e2e1d9] rounded-2xl p-5">
+              <h2 className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-widest mb-4">
+                Position in USD
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">Collateral Value</p>
+                  <p className="font-bold text-[#141414]">${formatAmount(details.collateral_usd)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">Total Debt</p>
+                  <p className="font-bold text-red-600">${formatAmount(details.debt_borrowed)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">Accrued Interest</p>
+                  <p className="font-bold text-amber-600">${formatAmount(details.accrued_interest)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b6b6b]">Health Factor</p>
+                  <p className={`font-bold ${details.health_factor >= 150 ? 'text-green-700' : details.health_factor >= 120 ? 'text-amber-600' : 'text-red-600'}`}>
+                    {details.health_factor > 999 ? '999%+' : `${details.health_factor}%`}
+                  </p>
                 </div>
               </div>
             </div>

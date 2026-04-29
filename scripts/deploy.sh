@@ -88,7 +88,9 @@ stellar contract invoke \
   --debt_token "$DEBT_TOKEN_ID" \
   --collateral_ratio 150 \
   --liquidation_threshold 120 \
-  --liquidation_bonus 5
+  --liquidation_bonus 5 \
+  --interest_rate_bps 500 \
+  --xlm_price_usd 1200000
 success "lending_pool initialized."
 
 # ── Step 8: Set lending_pool as authorized minter on debt_token ───────────────
