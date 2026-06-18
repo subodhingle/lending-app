@@ -4,19 +4,18 @@ import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import {
   liquidate,
-  getPosition,
-  getHealthFactor,
+  flashLiquidate,
+  getPositionDetails,
   formatAmount,
   parseAmount,
   getHealthColor,
   getHealthLabel,
-  type Position,
+  type PositionDetails,
 } from '../lib/ContractInteraction'
 
 interface BorrowerInfo {
   address: string
-  position: Position
-  healthFactor: number
+  details: PositionDetails
 }
 
 export function Liquidate() {
@@ -24,6 +23,7 @@ export function Liquidate() {
   const [borrowerAddress, setBorrowerAddress] = useState('')
   const [repayAmount, setRepayAmount] = useState('')
   const [borrowerInfo, setBorrowerInfo] = useState<BorrowerInfo | null>(null)
+  const [mode, setMode] = useState<'standard' | 'flash'>('standard')
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState('')
   const [txStatus, setTxStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -39,11 +39,12 @@ export function Liquidate() {
     setBorrowerInfo(null)
 
     try {
-      const [pos, hf] = await Promise.all([
-        getPosition(borrowerAddress),
-        getHealthFactor(borrowerAddress),
-      ])
-      setBorrowerInfo({ address: borrowerAddress, position: pos, healthFactor: hf })
+      const details = await getPositionDetails(borrowerAddress)
+      if (!details) {
+        setLookupError('Position not found')
+        return
+      }
+      setBorrowerInfo({ address: borrowerAddress, details })
     } catch (e) {
       setLookupError(e instanceof Error ? e.message : 'Failed to fetch position')
     } finally {
@@ -59,12 +60,20 @@ export function Liquidate() {
     if (parsed <= 0n) return
 
     setTxStatus('loading')
-    setTxMessage('Liquidating position...')
+    setTxMessage(mode === 'flash' ? 'Initiating flash liquidation...' : 'Liquidating position...')
 
     try {
-      await liquidate(address, borrowerInfo.address, parsed)
+      if (mode === 'flash') {
+        await flashLiquidate(address, borrowerInfo.address, parsed)
+      } else {
+        await liquidate(address, borrowerInfo.address, parsed)
+      }
       setTxStatus('success')
-      setTxMessage(`Successfully liquidated ${repayAmount} dTOKEN of debt from ${borrowerInfo.address.slice(0, 8)}...`)
+      setTxMessage(
+        mode === 'flash'
+          ? `Flash liquidation successful! You earned +${formatAmount(netProfit)} XLM profit.`
+          : `Successfully liquidated ${repayAmount} dTOKEN of debt from ${borrowerInfo.address.slice(0, 8)}...`
+      )
       setRepayAmount('')
       setBorrowerInfo(null)
       setBorrowerAddress('')
@@ -74,12 +83,28 @@ export function Liquidate() {
     }
   }
 
-  const isLiquidatable = borrowerInfo && borrowerInfo.healthFactor > 0 && borrowerInfo.healthFactor < LIQUIDATION_THRESHOLD
+  const isLiquidatable = borrowerInfo && borrowerInfo.details.health_factor > 0 && borrowerInfo.details.health_factor < LIQUIDATION_THRESHOLD
 
-  // Collateral to seize = repayAmount + 5% bonus
+  // Calculations
+  const parsedRepay = repayAmount ? parseAmount(repayAmount) : 0n
+  const xlmPrice = borrowerInfo ? borrowerInfo.details.xlm_price_usd : 1200000n
+
+  // Standard collateral to seize = repayAmount + 5% bonus
   const collateralToSeize = repayAmount
-    ? parseAmount(repayAmount) + parseAmount(repayAmount) * 5n / 100n
+    ? parsedRepay + (parsedRepay * 5n) / 100n
     : 0n
+
+  // Flash liquidation calculations:
+  // xlm_equivalent = repay_amount * 10^7 / price
+  const xlmEquivalent = xlmPrice > 0n ? (parsedRepay * 10_000_000n) / xlmPrice : 0n
+  // seized = xlm_equivalent * 1.05
+  const flashCollateralSeized = (xlmEquivalent * 105n) / 100n
+  // fee = 10 bps = 0.1%
+  const totalRepay = (parsedRepay * 10010n) / 10000n
+  // xlm_needed = total_repay * 10^7 / price
+  const xlmNeeded = xlmPrice > 0n ? (totalRepay * 10_000_000n) / xlmPrice : 0n
+  // net_profit = seized - xlm_needed
+  const netProfit = flashCollateralSeized > xlmNeeded ? flashCollateralSeized - xlmNeeded : 0n
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
@@ -143,7 +168,7 @@ export function Liquidate() {
                     ? 'bg-red-100 text-red-600 border border-red-200'
                     : 'bg-green-100 text-green-700 border border-green-200'
                 }`}>
-                  {getHealthLabel(borrowerInfo.healthFactor)}
+                  {getHealthLabel(borrowerInfo.details.health_factor)}
                 </span>
               </div>
 
@@ -157,19 +182,19 @@ export function Liquidate() {
                 <div className="flex justify-between">
                   <span className="text-[#6b6b6b]">Collateral</span>
                   <span className="font-semibold text-[#1a1a1a]">
-                    {formatAmount(borrowerInfo.position.collateral_deposited)} XLM
+                    {formatAmount(borrowerInfo.details.collateral_deposited)} XLM
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#6b6b6b]">Debt</span>
                   <span className="font-semibold text-[#1a1a1a]">
-                    {formatAmount(borrowerInfo.position.debt_borrowed)} dTOKEN
+                    {formatAmount(borrowerInfo.details.debt_borrowed)} dTOKEN
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#6b6b6b]">Health Factor</span>
-                  <span className={`font-bold ${getHealthColor(borrowerInfo.healthFactor)}`}>
-                    {borrowerInfo.healthFactor}%
+                  <span className={`font-bold ${getHealthColor(borrowerInfo.details.health_factor)}`}>
+                    {borrowerInfo.details.health_factor}%
                   </span>
                 </div>
               </div>
@@ -186,12 +211,47 @@ export function Liquidate() {
           {borrowerInfo && isLiquidatable && (
             <div className="bg-white border border-[#e0e0d8] rounded-2xl p-6 space-y-4">
               <h2 className="font-semibold text-[#1a1a1a]">Execute Liquidation</h2>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="text-xs text-amber-700">
-                  You will repay dTOKEN debt and receive XLM collateral + 5% bonus.
-                  You must hold enough dTOKEN in your wallet.
-                </p>
+
+              {/* Pill selector for standard vs flash liquidations */}
+              <div className="flex bg-[#f5f5f0] p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setMode('standard')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                    mode === 'standard'
+                      ? 'bg-white text-[#1a1a1a] shadow-sm font-semibold'
+                      : 'text-[#6b6b6b] hover:text-[#1a1a1a]'
+                  }`}
+                >
+                  Standard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('flash')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                    mode === 'flash'
+                      ? 'bg-white text-[#1a1a1a] shadow-sm font-bold'
+                      : 'text-[#6b6b6b] hover:text-[#1a1a1a]'
+                  }`}
+                >
+                  <span>⚡</span> Flash Liquidate
+                </button>
               </div>
+
+              {mode === 'standard' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    You will repay dTOKEN debt directly from your wallet and receive the seized XLM collateral + 5% bonus.
+                    You must hold enough dTOKEN in your wallet.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                  <p className="text-xs text-indigo-700 leading-relaxed">
+                    ⚡ <strong>Zero Capital Required:</strong> You borrow the dTOKEN via a flash loan, perform the liquidation, swap collateral back to repay the loan + fee, and receive the remaining XLM as pure profit.
+                  </p>
+                </div>
+              )}
 
               <form onSubmit={handleLiquidate} className="space-y-4">
                 <div>
@@ -216,25 +276,50 @@ export function Liquidate() {
                 </div>
 
                 {repayAmount && parseFloat(repayAmount) > 0 && (
-                  <div className="bg-[#f5f5f0] rounded-xl p-3 space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-[#6b6b6b]">Debt repaid</span>
-                      <span className="font-medium">{repayAmount} dTOKEN</span>
+                  mode === 'standard' ? (
+                    <div className="bg-[#f5f5f0] rounded-xl p-3 space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#6b6b6b]">Debt repaid</span>
+                        <span className="font-medium">{repayAmount} dTOKEN</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b6b6b]">Collateral seized (+5%)</span>
+                        <span className="font-medium text-green-700">
+                          {formatAmount(collateralToSeize)} XLM
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#6b6b6b]">Collateral seized (+5%)</span>
-                      <span className="font-medium text-green-700">
-                        {formatAmount(collateralToSeize)} XLM
-                      </span>
+                  ) : (
+                    <div className="bg-[#f5f5f0] rounded-xl p-3 space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#6b6b6b]">Debt liquidated</span>
+                        <span className="font-medium">{repayAmount} dTOKEN</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6b6b6b]">Flash Loan Fee (0.1%)</span>
+                        <span className="font-medium text-amber-700">
+                          {formatAmount(totalRepay - parsedRepay)} dTOKEN
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-[#e2e1d9] pt-2">
+                        <span className="text-[#6b6b6b] font-medium">Estimated Net XLM Profit</span>
+                        <span className="font-bold text-green-700">
+                          +{formatAmount(netProfit)} XLM
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
 
                 <button
                   type="submit"
-                  className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors"
+                  className={`w-full text-white py-3 rounded-xl font-medium transition-colors ${
+                    mode === 'flash'
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
-                  Liquidate Position
+                  {mode === 'flash' ? '⚡ Flash Liquidate' : 'Liquidate Position'}
                 </button>
               </form>
             </div>
@@ -254,15 +339,15 @@ export function Liquidate() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-[#e2e1d9] rounded-2xl p-5">
             <p className="font-bold text-[#141414] text-sm mb-1">Find an unhealthy position</p>
-            <p className="text-sm text-[#6b6b6b] leading-relaxed">Enter any wallet address to check their health factor. Positions below 120% are eligible.</p>
+            <p className="text-sm text-[#6b6b6b] leading-relaxed font-normal">Enter any wallet address to check their health factor. Positions below 120% are eligible.</p>
           </div>
           <div className="bg-white border border-[#e2e1d9] rounded-2xl p-5">
-            <p className="font-bold text-[#141414] text-sm mb-1">Repay their debt</p>
-            <p className="text-sm text-[#6b6b6b] leading-relaxed">You pay dTOKEN on behalf of the borrower. You must hold enough dTOKEN in your wallet.</p>
+            <p className="font-bold text-[#141414] text-sm mb-1">Standard vs Flash</p>
+            <p className="text-sm text-[#6b6b6b] leading-relaxed font-normal">Choose Standard if you have dTOKEN to repay, or use Flash Liquidate to execute with zero capital.</p>
           </div>
           <div className="bg-white border border-[#e2e1d9] rounded-2xl p-5">
             <p className="font-bold text-[#141414] text-sm mb-1">Receive collateral + bonus</p>
-            <p className="text-sm text-[#6b6b6b] leading-relaxed">You receive XLM collateral equal to the debt repaid plus a 5% bonus. Net positive for you, net protective for the protocol.</p>
+            <p className="text-sm text-[#6b6b6b] leading-relaxed font-normal">Receive borrower's collateral equal to debt repaid plus a 5% bonus. Flash mode swaps back debt automatically, keeping the remainder.</p>
           </div>
         </div>
       </div>
@@ -270,7 +355,9 @@ export function Liquidate() {
       {/* Formula */}
       <div className="mt-4">
         <div className="bg-[#f7f6f2] border border-[#e2e1d9] rounded-xl p-4 font-mono text-sm text-[#141414]">
-          Collateral seized = Repay amount × 1.05
+          {mode === 'standard'
+            ? 'Collateral seized = Repay amount × 1.05'
+            : 'XLM Profit = (Repay amount × 1.05 / Price) - (Repay amount × 1.001 / Price)'}
         </div>
       </div>
 
@@ -278,7 +365,7 @@ export function Liquidate() {
       <div className="mt-4">
         <div className="bg-[#fdf8f0] border border-[#f0e8d0] rounded-xl p-4 flex gap-3">
           <span className="text-amber-500 shrink-0 mt-0.5">△</span>
-          <p className="text-sm text-[#6b6b6b] leading-relaxed">Liquidations are permissionless. Any wallet can liquidate any eligible position. The 5% bonus is the liquidator's incentive — no special role or whitelist required.</p>
+          <p className="text-sm text-[#6b6b6b] leading-relaxed font-normal">Liquidations are permissionless. Any wallet can liquidate any eligible position. The 5% bonus is the liquidator's incentive — no special role or whitelist required.</p>
         </div>
       </div>
     </div>

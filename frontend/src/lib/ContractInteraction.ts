@@ -30,7 +30,9 @@ function isValidContractId(id: string | undefined): boolean {
 export const CONTRACT_IDS = {
   collateralToken: import.meta.env.VITE_COLLATERAL_TOKEN_ID as string,
   debtToken: import.meta.env.VITE_DEBT_TOKEN_ID as string,
-  lendingPool: import.meta.env.VITE_LENDING_POOL_ID as string,
+  lendingPool: (import.meta.env.VITE_LENDING_POOL_V2_ID || import.meta.env.VITE_LENDING_POOL_ID) as string,
+  flashLoanPool: import.meta.env.VITE_FLASH_LOAN_POOL_ID as string,
+  flashLiquidator: import.meta.env.VITE_FLASH_LIQUIDATOR_ID as string,
 }
 
 // The collateral token is native XLM (Stellar Asset Contract)
@@ -41,7 +43,9 @@ export function contractsDeployed(): boolean {
   return (
     isValidContractId(CONTRACT_IDS.collateralToken) &&
     isValidContractId(CONTRACT_IDS.debtToken) &&
-    isValidContractId(CONTRACT_IDS.lendingPool)
+    isValidContractId(CONTRACT_IDS.lendingPool) &&
+    isValidContractId(CONTRACT_IDS.flashLoanPool) &&
+    isValidContractId(CONTRACT_IDS.flashLiquidator)
   )
 }
 
@@ -383,6 +387,25 @@ export async function liquidate(
     addressVal(liquidatorAddress),
     addressVal(borrowerAddress),
     i128Val(repayAmount),
+  ])
+}
+
+export async function flashLiquidate(
+  initiatorAddress: string,
+  borrowerAddress: string,
+  repayAmount: bigint
+): Promise<SorobanRpc.Api.GetTransactionResponse> {
+  const argsVal = nativeToScVal([
+    new Address(borrowerAddress),
+    new Address(initiatorAddress),
+    new Address(CONTRACT_IDS.lendingPool),
+  ])
+
+  return invokeContract(CONTRACT_IDS.flashLoanPool, 'flash_loan', [
+    addressVal(CONTRACT_IDS.flashLiquidator),
+    i128Val(repayAmount),
+    u32Val(10), // 10 bps fee = 0.1%
+    argsVal,
   ])
 }
 

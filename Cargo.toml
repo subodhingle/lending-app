@@ -3,6 +3,9 @@ members = [
     "contracts/collateral_token",
     "contracts/debt_token",
     "contracts/lending_pool",
+    "contracts/flash_liquidator",
+    "contracts/lending_pool_v2",
+    "contracts/flash_loan_pool",
 ]
 resolver = "2"
 

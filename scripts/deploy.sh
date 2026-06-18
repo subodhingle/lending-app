@@ -103,12 +103,79 @@ stellar contract invoke \
   --minter "$LENDING_POOL_ID"
 success "Minter set."
 
+# ── Step 8b: Deploy lending_pool_v2 ───────────────────────────────────────────
+log "Step 8b: Deploying lending_pool_v2..."
+LENDING_POOL_V2_ID=$(stellar contract deploy \
+  --wasm "$WASM_DIR/lending_pool_v2.wasm" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  2>&1 | tail -1)
+success "lending_pool_v2: $LENDING_POOL_V2_ID"
+
+# ── Step 8c: Initialize lending_pool_v2 ────────────────────────────────────────
+log "Step 8c: Initializing lending_pool_v2..."
+stellar contract invoke \
+  --id "$LENDING_POOL_V2_ID" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  -- initialize \
+  --admin "$DEPLOYER_ADDRESS" \
+  --collateral_token "$COLLATERAL_TOKEN_ID" \
+  --debt_token "$DEBT_TOKEN_ID" \
+  --collateral_ratio 150 \
+  --liquidation_threshold 120 \
+  --liquidation_bonus 5 \
+  --interest_rate_bps 500 \
+  --xlm_price_usd 1200000
+success "lending_pool_v2 initialized."
+
+# ── Step 8d: Set lending_pool_v2 as authorized minter on debt_token ───────────
+log "Step 8d: Setting lending_pool_v2 as minter on debt_token..."
+stellar contract invoke \
+  --id "$DEBT_TOKEN_ID" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  -- set_minter \
+  --minter "$LENDING_POOL_V2_ID"
+success "Minter set to lending_pool_v2."
+
+# ── Step 8e: Deploy flash_loan_pool ───────────────────────────────────────────
+log "Step 8e: Deploying flash_loan_pool..."
+FLASH_LOAN_POOL_ID=$(stellar contract deploy \
+  --wasm "$WASM_DIR/flash_loan_pool.wasm" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  2>&1 | tail -1)
+success "flash_loan_pool: $FLASH_LOAN_POOL_ID"
+
+# ── Step 8f: Initialize flash_loan_pool ───────────────────────────────────────
+log "Step 8f: Initializing flash_loan_pool..."
+stellar contract invoke \
+  --id "$FLASH_LOAN_POOL_ID" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  -- initialize \
+  --token "$DEBT_TOKEN_ID"
+success "flash_loan_pool initialized."
+
+# ── Step 8g: Deploy flash_liquidator ──────────────────────────────────────────
+log "Step 8g: Deploying flash_liquidator..."
+FLASH_LIQUIDATOR_ID=$(stellar contract deploy \
+  --wasm "$WASM_DIR/flash_liquidator.wasm" \
+  --source "$KEY_NAME" \
+  --network "$NETWORK" \
+  2>&1 | tail -1)
+success "flash_liquidator: $FLASH_LIQUIDATOR_ID"
+
 # ── Step 9: Save .env files ───────────────────────────────────────────────────
 log "Step 9: Saving contract IDs..."
 
 ENV_CONTENT="VITE_COLLATERAL_TOKEN_ID=$COLLATERAL_TOKEN_ID
 VITE_DEBT_TOKEN_ID=$DEBT_TOKEN_ID
 VITE_LENDING_POOL_ID=$LENDING_POOL_ID
+VITE_LENDING_POOL_V2_ID=$LENDING_POOL_V2_ID
+VITE_FLASH_LOAN_POOL_ID=$FLASH_LOAN_POOL_ID
+VITE_FLASH_LIQUIDATOR_ID=$FLASH_LIQUIDATOR_ID
 VITE_NETWORK=$NETWORK
 VITE_RPC_URL=$RPC_URL"
 
@@ -124,7 +191,10 @@ echo ""
 echo "  Deployer:         $DEPLOYER_ADDRESS"
 echo "  Collateral (XLM): $COLLATERAL_TOKEN_ID"
 echo "  Debt Token:       $DEBT_TOKEN_ID"
-echo "  Lending Pool:     $LENDING_POOL_ID"
+echo "  Lending Pool V1:  $LENDING_POOL_ID"
+echo "  Lending Pool V2:  $LENDING_POOL_V2_ID"
+echo "  Flash Loan Pool:  $FLASH_LOAN_POOL_ID"
+echo "  Flash Liquidator: $FLASH_LIQUIDATOR_ID"
 echo "  Network:          $NETWORK"
 echo ""
 echo -e "  Explorer: ${BLUE}https://stellar.expert/explorer/testnet${NC}"
