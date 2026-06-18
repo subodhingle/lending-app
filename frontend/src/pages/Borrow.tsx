@@ -2,23 +2,18 @@ import { useState, useEffect } from 'react'
 import { useWallet } from '../context/WalletContext'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
-import { borrow, getPosition, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type Position } from '../lib/ContractInteraction'
+import { borrow, getPositionDetails, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
 
 export function Borrow() {
   const { address, connected } = useWallet()
   const [amount, setAmount] = useState('')
-  const [position, setPosition] = useState<Position>({ collateral_deposited: 0n, debt_borrowed: 0n })
+  const [details, setDetails] = useState<PositionDetails | null>(null)
   const [txStatus, setTxStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [txMessage, setTxMessage] = useState('')
 
-  const COLLATERAL_RATIO = 150n
-  const maxBorrowable = position.collateral_deposited * 100n / COLLATERAL_RATIO
-  const availableToBorrow = maxBorrowable > position.debt_borrowed ? maxBorrowable - position.debt_borrowed : 0n
-  const utilizationPct = maxBorrowable > 0n ? Number((position.debt_borrowed * 100n) / maxBorrowable) : 0
-
   useEffect(() => {
     if (!address) return
-    getPosition(address).then(setPosition).catch(console.error)
+    getPositionDetails(address).then(setDetails).catch(console.error)
   }, [address])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,13 +28,34 @@ export function Borrow() {
       setTxStatus('success')
       setTxMessage(`Successfully borrowed ${amount} ${DEBT_SYMBOL}.`)
       setAmount('')
-      const pos = await getPosition(address)
-      setPosition(pos)
+      const det = await getPositionDetails(address)
+      setDetails(det)
     } catch (e) {
       setTxStatus('error')
       setTxMessage(e instanceof Error ? e.message : 'Transaction failed')
     }
   }
+
+  const currentCollateral = details?.collateral_deposited ?? 0n
+  const collateralUsd = details?.collateral_usd ?? 0n
+  const currentDebt = details?.debt_borrowed ?? 0n
+
+  const maxBorrowable = (collateralUsd * 100n) / 150n
+  const availableToBorrow = maxBorrowable > currentDebt ? maxBorrowable - currentDebt : 0n
+  const utilizationPct = maxBorrowable > 0n ? Number((currentDebt * 100n) / maxBorrowable) : 0
+
+  const borrowAmountRaw = parseAmount(amount)
+  const newDebt = currentDebt + borrowAmountRaw
+  const newUtilizationPct = maxBorrowable > 0n ? Number((newDebt * 100n) / maxBorrowable) : 0
+
+  let currentHealth = details?.health_factor ?? 0
+  let newHealthFactor = 0
+  if (newDebt > 0n) {
+    newHealthFactor = Number((collateralUsd * 100n) / newDebt)
+  }
+
+  const currentLiqPrice = currentCollateral > 0n ? (currentDebt * 120n * 100_000n) / currentCollateral : 0n
+  const newLiqPrice = currentCollateral > 0n ? (newDebt * 120n * 100_000n) / currentCollateral : 0n
 
   return (
     <div className="py-8">
@@ -63,9 +79,9 @@ export function Borrow() {
             <div className="bg-white border border-[#e2e1d9] rounded-2xl p-6 space-y-5">
               <div className="bg-[#f7f6f2] rounded-xl p-4 space-y-3">
                 {[
-                  { label: 'Collateral Deposited', value: `${formatAmount(position.collateral_deposited)} ${COLLATERAL_SYMBOL}` },
+                  { label: 'Collateral Deposited', value: `${formatAmount(currentCollateral)} ${COLLATERAL_SYMBOL}` },
                   { label: 'Max Borrowable (150%)', value: `${formatAmount(maxBorrowable)} ${DEBT_SYMBOL}` },
-                  { label: 'Current Debt', value: `${formatAmount(position.debt_borrowed)} ${DEBT_SYMBOL}` },
+                  { label: 'Current Debt', value: `${formatAmount(currentDebt)} ${DEBT_SYMBOL}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-sm">
                     <span className="text-[#6b6b6b]">{label}</span>
@@ -88,7 +104,7 @@ export function Borrow() {
                   </div>
                 )}
               </div>
-              {position.collateral_deposited === 0n && (
+              {currentCollateral === 0n && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                   <p className="text-sm text-amber-700">Deposit {COLLATERAL_SYMBOL} first before borrowing.</p>
                 </div>
@@ -108,7 +124,34 @@ export function Borrow() {
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || position.collateral_deposited === 0n}
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="bg-[#f7f6f2] border border-[#e2e1d9] rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-[#6b6b6b] uppercase tracking-wider">Simulated Position Preview</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm pt-1">
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Total Debt</span>
+                        <span className="font-semibold text-red-600">${formatAmount(currentDebt)} → ${formatAmount(newDebt)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Utilization</span>
+                        <span className="font-semibold text-[#141414]">{utilizationPct}% → {newUtilizationPct}%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Health Factor</span>
+                        <span className={`font-bold ${newHealthFactor >= 150 ? 'text-green-700' : newHealthFactor >= 120 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {currentHealth === 0 ? 'N/A' : (currentHealth > 999 ? '999%+' : `${currentHealth}%`)} → {newHealthFactor > 999 ? '999%+' : `${newHealthFactor}%`}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Liquidation Price (XLM)</span>
+                        <span className="font-semibold text-[#141414]">
+                          {currentLiqPrice === 0n ? 'N/A' : `$${(Number(currentLiqPrice) / 10_000_000).toFixed(4)}`} → ${(Number(newLiqPrice) / 10_000_000).toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentCollateral === 0n}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                   Borrow {DEBT_SYMBOL}
                 </button>

@@ -5,22 +5,33 @@ import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import {
   depositCollateral,
   getTokenBalance,
+  getPositionDetails,
   formatAmount,
   parseAmount,
   CONTRACT_IDS,
   COLLATERAL_SYMBOL,
+  type PositionDetails,
 } from '../lib/ContractInteraction'
 
 export function Deposit() {
   const { address, connected } = useWallet()
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState(0n)
+  const [details, setDetails] = useState<PositionDetails | null>(null)
   const [txStatus, setTxStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [txMessage, setTxMessage] = useState('')
 
   useEffect(() => {
     if (!address) return
-    getTokenBalance(CONTRACT_IDS.collateralToken, address).then(setBalance).catch(console.error)
+    Promise.all([
+      getTokenBalance(CONTRACT_IDS.collateralToken, address),
+      getPositionDetails(address)
+    ])
+      .then(([bal, det]) => {
+        setBalance(bal)
+        setDetails(det)
+      })
+      .catch(console.error)
   }, [address])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,12 +51,33 @@ export function Deposit() {
       setTxStatus('success')
       setTxMessage(`Successfully deposited ${amount} ${COLLATERAL_SYMBOL} as collateral.`)
       setAmount('')
-      const newBal = await getTokenBalance(CONTRACT_IDS.collateralToken, address)
+      const [newBal, newDet] = await Promise.all([
+        getTokenBalance(CONTRACT_IDS.collateralToken, address),
+        getPositionDetails(address)
+      ])
       setBalance(newBal)
+      setDetails(newDet)
     } catch (e) {
       setTxStatus('error')
       setTxMessage(e instanceof Error ? e.message : 'Transaction failed')
     }
+  }
+
+  const price = details?.xlm_price_usd ?? 0n
+  const depositAmountRaw = parseAmount(amount)
+  const depositUsd = (depositAmountRaw * price) / 10_000_000n
+  const depositMaxBorrowable = (depositUsd * 100n) / 150n
+
+  const currentCollateral = details?.collateral_deposited ?? 0n
+  const newCollateral = currentCollateral + depositAmountRaw
+  const newCollateralUsd = (newCollateral * price) / 10_000_000n
+  const currentDebt = details?.debt_borrowed ?? 0n
+  const newMaxBorrowable = (newCollateralUsd * 100n) / 150n
+
+  let currentHealth = details?.health_factor ?? 0
+  let newHealthFactor = 0
+  if (currentDebt > 0n) {
+    newHealthFactor = Number((newCollateralUsd * 100n) / currentDebt)
   }
 
   return (
@@ -54,7 +86,7 @@ export function Deposit() {
         <p className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-widest mb-2">Collateral</p>
         <h1 className="text-3xl font-black tracking-tight text-[#141414]">Deposit XLM</h1>
         <p className="text-sm text-[#6b6b6b] mt-2">
-          Lock native XLM into the lending pool. Deposit 150 XLM, borrow up to 100 dTOKEN.
+          Lock native XLM into the lending pool. Enforces 150% collateral ratio in USD terms.
         </p>
       </div>
       <NotDeployedBanner />
@@ -101,10 +133,33 @@ export function Deposit() {
                   <div className="flex justify-between text-sm">
                     <span className="text-[#6b6b6b]">Max borrowable (150%)</span>
                     <span className="font-medium text-[#141414]">
-                      {amount ? formatAmount(parseAmount(amount) * 100n / 150n) : '0'} dTOKEN
+                      {amount ? formatAmount(depositMaxBorrowable) : '0'} dTOKEN
                     </span>
                   </div>
                 </div>
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="bg-[#f7f6f2] border border-[#e2e1d9] rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-[#6b6b6b] uppercase tracking-wider">Simulated Position Preview</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm pt-1">
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Collateral Deposited</span>
+                        <span className="font-semibold text-[#141414]">{formatAmount(currentCollateral)} → {formatAmount(newCollateral)} {COLLATERAL_SYMBOL}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Max Borrow Limit</span>
+                        <span className="font-semibold text-[#141414]">${formatAmount((currentCollateral * price / 10_000_000n) * 100n / 150n)} → ${formatAmount(newMaxBorrowable)}</span>
+                      </div>
+                      {currentDebt > 0n && (
+                        <div className="col-span-2 border-t border-[#e2e1d9] pt-2">
+                          <span className="text-[#6b6b6b] block text-xs">Health Factor</span>
+                          <span className="font-bold text-[#141414]">
+                            {currentHealth > 999 ? '999%+' : `${currentHealth}%`} → {newHealthFactor > 999 ? '999%+' : `${newHealthFactor}%`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <button type="submit" disabled={!amount || parseFloat(amount) <= 0}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                   Deposit {COLLATERAL_SYMBOL}

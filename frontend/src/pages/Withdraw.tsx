@@ -2,23 +2,18 @@ import { useState, useEffect } from 'react'
 import { useWallet } from '../context/WalletContext'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
-import { withdrawCollateral, getPosition, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type Position } from '../lib/ContractInteraction'
+import { withdrawCollateral, getPositionDetails, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
 
 export function Withdraw() {
   const { address, connected } = useWallet()
   const [amount, setAmount] = useState('')
-  const [position, setPosition] = useState<Position>({ collateral_deposited: 0n, debt_borrowed: 0n })
+  const [details, setDetails] = useState<PositionDetails | null>(null)
   const [txStatus, setTxStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [txMessage, setTxMessage] = useState('')
 
-  const COLLATERAL_RATIO = 150n
-  const minCollateralRequired = position.debt_borrowed > 0n ? (position.debt_borrowed * COLLATERAL_RATIO) / 100n : 0n
-  const maxWithdrawable = position.collateral_deposited > minCollateralRequired
-    ? position.collateral_deposited - minCollateralRequired : 0n
-
   useEffect(() => {
     if (!address) return
-    getPosition(address).then(setPosition).catch(console.error)
+    getPositionDetails(address).then(setDetails).catch(console.error)
   }, [address])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,13 +28,38 @@ export function Withdraw() {
       setTxStatus('success')
       setTxMessage(`Successfully withdrew ${amount} ${COLLATERAL_SYMBOL}.`)
       setAmount('')
-      const pos = await getPosition(address)
-      setPosition(pos)
+      const det = await getPositionDetails(address)
+      setDetails(det)
     } catch (e) {
       setTxStatus('error')
       setTxMessage(e instanceof Error ? e.message : 'Transaction failed')
     }
   }
+
+  const price = details?.xlm_price_usd ?? 0n
+  const currentCollateral = details?.collateral_deposited ?? 0n
+  const currentDebt = details?.debt_borrowed ?? 0n
+
+  const minCollateralRequired = currentDebt > 0n && price > 0n
+    ? (currentDebt * 150n * 10_000_000n) / (100n * price)
+    : 0n
+
+  const maxWithdrawable = currentCollateral > minCollateralRequired
+    ? currentCollateral - minCollateralRequired
+    : 0n
+
+  const withdrawAmountRaw = parseAmount(amount)
+  const newCollateral = currentCollateral > withdrawAmountRaw ? currentCollateral - withdrawAmountRaw : 0n
+  const newCollateralUsd = (newCollateral * price) / 10_000_000n
+
+  let currentHealth = details?.health_factor ?? 0
+  let newHealthFactor = 0
+  if (currentDebt > 0n) {
+    newHealthFactor = Number((newCollateralUsd * 100n) / currentDebt)
+  }
+
+  const currentLiqPrice = currentCollateral > 0n ? (currentDebt * 120n * 100_000n) / currentCollateral : 0n
+  const newLiqPrice = newCollateral > 0n ? (currentDebt * 120n * 100_000n) / newCollateral : 0n
 
   return (
     <div className="py-8">
@@ -63,8 +83,8 @@ export function Withdraw() {
             <div className="bg-white border border-[#e2e1d9] rounded-2xl p-6 space-y-5">
               <div className="bg-[#f7f6f2] rounded-xl p-4 space-y-2">
                 {[
-                  { label: 'Deposited', value: `${formatAmount(position.collateral_deposited)} ${COLLATERAL_SYMBOL}` },
-                  { label: 'Outstanding Debt', value: `${formatAmount(position.debt_borrowed)} ${DEBT_SYMBOL}` },
+                  { label: 'Deposited', value: `${formatAmount(currentCollateral)} ${COLLATERAL_SYMBOL}` },
+                  { label: 'Outstanding Debt', value: `${formatAmount(currentDebt)} ${DEBT_SYMBOL}` },
                   { label: 'Min Collateral Required', value: `${formatAmount(minCollateralRequired)} ${COLLATERAL_SYMBOL}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-sm">
@@ -77,7 +97,7 @@ export function Withdraw() {
                   <span className="font-bold text-green-700">{formatAmount(maxWithdrawable)} {COLLATERAL_SYMBOL}</span>
                 </div>
               </div>
-              {position.collateral_deposited === 0n && (
+              {currentCollateral === 0n && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
                   <p className="text-sm text-amber-700">No collateral deposited.</p>
                 </div>
@@ -97,7 +117,36 @@ export function Withdraw() {
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || position.collateral_deposited === 0n}
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="bg-[#f7f6f2] border border-[#e2e1d9] rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-[#6b6b6b] uppercase tracking-wider">Simulated Position Preview</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm pt-1">
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Collateral Deposited</span>
+                        <span className="font-semibold text-[#141414]">{formatAmount(currentCollateral)} → {formatAmount(newCollateral)} {COLLATERAL_SYMBOL}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs font-semibold">Min Collateral Required</span>
+                        <span className="font-semibold text-[#141414]">{formatAmount(minCollateralRequired)} {COLLATERAL_SYMBOL}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Health Factor</span>
+                        <span className={`font-bold ${newHealthFactor >= 150 ? 'text-green-700' : newHealthFactor >= 120 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {currentHealth === 0 ? 'N/A' : (currentHealth > 999 ? '999%+' : `${currentHealth}%`)} → {currentDebt === 0n ? 'No Debt' : `${newHealthFactor}%`}
+                        </span>
+                      </div>
+                      {currentDebt > 0n && (
+                        <div>
+                          <span className="text-[#6b6b6b] block text-xs">Liquidation Price (XLM)</span>
+                          <span className="font-semibold text-[#141414]">
+                            {currentLiqPrice === 0n ? 'N/A' : `$${(Number(currentLiqPrice) / 10_000_000).toFixed(4)}`} → ${(Number(newLiqPrice) / 10_000_000).toFixed(4)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentCollateral === 0n}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                   Withdraw {COLLATERAL_SYMBOL}
                 </button>

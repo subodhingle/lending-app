@@ -2,20 +2,20 @@ import { useState, useEffect } from 'react'
 import { useWallet } from '../context/WalletContext'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
-import { repay, getPosition, getTokenBalance, formatAmount, parseAmount, CONTRACT_IDS, DEBT_SYMBOL, type Position } from '../lib/ContractInteraction'
+import { repay, getPositionDetails, getTokenBalance, formatAmount, parseAmount, CONTRACT_IDS, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
 
 export function Repay() {
   const { address, connected } = useWallet()
   const [amount, setAmount] = useState('')
-  const [position, setPosition] = useState<Position>({ collateral_deposited: 0n, debt_borrowed: 0n })
+  const [details, setDetails] = useState<PositionDetails | null>(null)
   const [dBalance, setDBalance] = useState(0n)
   const [txStatus, setTxStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [txMessage, setTxMessage] = useState('')
 
   useEffect(() => {
     if (!address) return
-    Promise.all([getPosition(address), getTokenBalance(CONTRACT_IDS.debtToken, address)])
-      .then(([pos, bal]) => { setPosition(pos); setDBalance(bal) })
+    Promise.all([getPositionDetails(address), getTokenBalance(CONTRACT_IDS.debtToken, address)])
+      .then(([det, bal]) => { setDetails(det); setDBalance(bal) })
       .catch(console.error)
   }, [address])
 
@@ -31,15 +31,30 @@ export function Repay() {
       setTxStatus('success')
       setTxMessage(`Successfully repaid ${amount} ${DEBT_SYMBOL}.`)
       setAmount('')
-      const [pos, bal] = await Promise.all([getPosition(address), getTokenBalance(CONTRACT_IDS.debtToken, address)])
-      setPosition(pos); setDBalance(bal)
+      const [det, bal] = await Promise.all([getPositionDetails(address), getTokenBalance(CONTRACT_IDS.debtToken, address)])
+      setDetails(det); setDBalance(bal)
     } catch (e) {
       setTxStatus('error')
       setTxMessage(e instanceof Error ? e.message : 'Transaction failed')
     }
   }
 
-  const maxRepay = position.debt_borrowed < dBalance ? position.debt_borrowed : dBalance
+  const currentDebt = details?.debt_borrowed ?? 0n
+  const currentCollateral = details?.collateral_deposited ?? 0n
+  const maxRepay = currentDebt < dBalance ? currentDebt : dBalance
+
+  const repayAmountRaw = parseAmount(amount)
+  const newDebt = currentDebt > repayAmountRaw ? currentDebt - repayAmountRaw : 0n
+
+  let currentHealth = details?.health_factor ?? 0
+  let newHealthFactor = 0
+  if (newDebt > 0n) {
+    const collateralUsd = details?.collateral_usd ?? 0n
+    newHealthFactor = Number((collateralUsd * 100n) / newDebt)
+  }
+
+  const currentLiqPrice = currentCollateral > 0n ? (currentDebt * 120n * 100_000n) / currentCollateral : 0n
+  const newLiqPrice = currentCollateral > 0n ? (newDebt * 120n * 100_000n) / currentCollateral : 0n
 
   return (
     <div className="py-8">
@@ -64,14 +79,14 @@ export function Repay() {
               <div className="bg-[#f7f6f2] rounded-xl p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#6b6b6b]">Outstanding Debt</span>
-                  <span className="font-semibold text-red-600">{formatAmount(position.debt_borrowed)} {DEBT_SYMBOL}</span>
+                  <span className="font-semibold text-red-600">{formatAmount(currentDebt)} {DEBT_SYMBOL}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-[#6b6b6b]">Wallet {DEBT_SYMBOL}</span>
                   <span className="font-semibold text-[#141414]">{formatAmount(dBalance)} {DEBT_SYMBOL}</span>
                 </div>
               </div>
-              {position.debt_borrowed === 0n && (
+              {currentDebt === 0n && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-3">
                   <p className="text-sm text-green-700">✓ No outstanding debt.</p>
                 </div>
@@ -91,7 +106,32 @@ export function Repay() {
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || position.debt_borrowed === 0n}
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="bg-[#f7f6f2] border border-[#e2e1d9] rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-[#6b6b6b] uppercase tracking-wider">Simulated Position Preview</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm pt-1">
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Total Debt</span>
+                        <span className="font-semibold text-red-600">${formatAmount(currentDebt)} → ${formatAmount(newDebt)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#6b6b6b] block text-xs">Health Factor</span>
+                        <span className={`font-bold ${newHealthFactor >= 150 ? 'text-green-700' : newHealthFactor >= 120 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {currentHealth === 0 ? 'N/A' : (currentHealth > 999 ? '999%+' : `${currentHealth}%`)} → {newDebt === 0n ? 'No Debt' : `${newHealthFactor}%`}
+                        </span>
+                      </div>
+                      {newDebt > 0n && (
+                        <div className="col-span-2 border-t border-[#e2e1d9] pt-2">
+                          <span className="text-[#6b6b6b] block text-xs">Liquidation Price (XLM)</span>
+                          <span className="font-semibold text-[#141414]">
+                            {currentLiqPrice === 0n ? 'N/A' : `$${(Number(currentLiqPrice) / 10_000_000).toFixed(4)}`} → ${(Number(newLiqPrice) / 10_000_000).toFixed(4)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentDebt === 0n}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                   Repay {DEBT_SYMBOL}
                 </button>
