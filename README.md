@@ -4,7 +4,7 @@ A fully decentralized lending protocol built on the Stellar network using Soroba
 
 **Rise In Journey to Mastery**
 
-🌐 **Live App:** [https://frontend-five-ochre-90.vercel.app](https://frontend-five-ochre-90.vercel.app)
+🌐 **Live App:** [https://stellar-lending-app.vercel.app](https://stellar-lending-app.vercel.app)
 📦 **GitHub:** [https://github.com/subodhingle/lending-app](https://github.com/subodhingle/lending-app)
 
 ---
@@ -26,12 +26,21 @@ The following improvements were made in response to reviewer feedback:
 ---
 
 ## Screenshots
-<img width="1280" height="849" alt="Screenshot 2026-04-24 at 12 01 17 PM" src="https://github.com/user-attachments/assets/8bf52f52-087f-4b24-811c-eda0cfac6828" />
-<img width="1257" height="843" alt="Screenshot 2026-04-24 at 12 00 42 PM" src="https://github.com/user-attachments/assets/f71678c9-f835-4b68-b8dd-1129de0202ca" />
-<img width="1251" height="863" alt="Screenshot 2026-04-24 at 12 00 53 PM" src="https://github.com/user-attachments/assets/d144cdd8-f3e1-48d7-97db-85ddc07f0008" />
-<img width="404" height="782" alt="Screenshot 2026-04-24 at 11 58 34 AM" src="https://github.com/user-attachments/assets/65264dd2-b2cf-4c4d-a31b-5c441772c98d" />
-<img width="356" height="764" alt="Screenshot 2026-04-24 at 11 58 52 AM" src="https://github.com/user-attachments/assets/6d918b7a-a62b-4598-a226-0546a47c0fd8" />
-<img width="360" height="770" alt="Screenshot 2026-04-24 at 11 59 00 AM" src="https://github.com/user-attachments/assets/79d0b801-0afd-462e-844e-db2775399cfe" />
+
+### Desktop Landing
+![Desktop Landing](docs/screenshots/desktop_landing.png)
+
+### Mobile responsive UI
+![Mobile responsive UI](docs/screenshots/mobile_landing.png)
+
+### User Dashboard (Desktop)
+![Dashboard Page](docs/screenshots/dashboard_page.png)
+
+### Zero-Capital Flash Liquidation Panel
+![Liquidate Page](docs/screenshots/liquidate_page.png)
+
+### Dynamic Interaction Walkthrough Demo
+![Walkthrough Demo](docs/screenshots/demo_walkthrough.webp)
 
 ---
 
@@ -188,8 +197,10 @@ All contracts are live on **Stellar Testnet**. View them on [Stellar Expert](htt
 | Contract | Address | Stellar Expert |
 |----------|---------|----------------|
 | Collateral (XLM SAC) | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | [View ↗](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
-| debt_token (dTOKEN) | `CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5` | [View ↗](https://stellar.expert/explorer/testnet/contract/CCL7AEFVYKZK6EZOMOLHZGGNCXO6TZTMOMMECLHKOK5D33VCNSPGOSY5) |
-| lending_pool | `CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ` | [View ↗](https://stellar.expert/explorer/testnet/contract/CDXK7RV2X5SDLYIHDDZEE2FAAUUQZEVGIEB7QZC44YLEIMGWG6ESEUQZ) |
+| debt_token (dTOKEN) | `CBKEVP3FUFGX2D72D3B5PFA3QZWX5T6AB76K32S7EWO4FOBAK7L2PD2G` | [View ↗](https://stellar.expert/explorer/testnet/contract/CBKEVP3FUFGX2D72D3B5PFA3QZWX5T6AB76K32S7EWO4FOBAK7L2PD2G) |
+| lending_pool V2 | `CBPNHXF5XCPISKXFB57JCT2TTYV5VUKMXPJG5KMIW3DYWT7HYOU4UVRA` | [View ↗](https://stellar.expert/explorer/testnet/contract/CBPNHXF5XCPISKXFB57JCT2TTYV5VUKMXPJG5KMIW3DYWT7HYOU4UVRA) |
+| Flash Loan Pool | `CDBGUNOIMSAGE6JVJQXY2GBOM46DU524XMYLWBV4PJEAZ3BRIUCX2SVF` | [View ↗](https://stellar.expert/explorer/testnet/contract/CDBGUNOIMSAGE6JVJQXY2GBOM46DU524XMYLWBV4PJEAZ3BRIUCX2SVF) |
+| Flash Liquidator | `CBBG7BWHNXCQCABBOUR5K34QTAF554UMPFOQUDAZYJU5RJQOLTIJZOJ6` | [View ↗](https://stellar.expert/explorer/testnet/contract/CBBG7BWHNXCQCABBOUR5K34QTAF554UMPFOQUDAZYJU5RJQOLTIJZOJ6) |
 
 **Deployer:** [`GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6`](https://stellar.expert/explorer/testnet/account/GC5HL2KXTCEXGZU4N6QIDQLIXW6HSFYEZV7ELAEEHDL4EHUMVSTZCPX6)
 

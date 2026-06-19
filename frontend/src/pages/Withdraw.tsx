@@ -146,9 +146,9 @@ export function Withdraw() {
                     </div>
                   </div>
                 )}
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentCollateral === 0n}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentCollateral === 0n || txStatus === 'loading'}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                  Withdraw {COLLATERAL_SYMBOL}
+                  {txStatus === 'loading' ? 'Processing...' : `Withdraw ${COLLATERAL_SYMBOL}`}
                 </button>
               </form>
             </div>

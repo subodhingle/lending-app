@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useWallet } from '../context/WalletContext'
 import { PositionCard } from '../components/PositionCard'
 import { HealthFactorGauge } from '../components/HealthFactorGauge'
+import { ActivityLog } from '../components/ActivityLog'
 import {
   getPosition,
   getHealthFactor,
@@ -239,6 +240,11 @@ export function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Activity Log */}
+          <div className="mt-8">
+            <ActivityLog />
           </div>
         </>
       )}

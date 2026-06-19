@@ -446,3 +446,77 @@ export function getHealthLabel(hf: number): string {
   if (hf >= 120) return 'Warning'
   return 'Danger'
 }
+
+export interface ProtocolEvent {
+  id: string
+  ledger: number
+  type: 'deposit' | 'borrow' | 'repay' | 'withdraw' | 'liquidate' | 'price' | 'unknown'
+  user?: string
+  liquidator?: string
+  borrower?: string
+  amount?: bigint
+  price?: number
+  timestamp?: string
+}
+
+export async function getEvents(): Promise<ProtocolEvent[]> {
+  try {
+    const latestLedger = (await server.getLatestLedger()).sequence
+    const startLedger = Math.max(1, latestLedger - 100)
+    const res = await server.getEvents({
+      startLedger,
+      filters: [{
+        type: 'contract',
+        contractIds: [CONTRACT_IDS.lendingPool]
+      }],
+      limit: 50
+    })
+
+    const parsed: ProtocolEvent[] = []
+    for (const evt of res.events) {
+      try {
+        const decodedTopics = evt.topic.map(t => scValToNative(t))
+        const decodedValue = scValToNative(evt.value)
+
+        const eventType = String(decodedTopics[0])
+        const timestamp = evt.ledgerClosedAt || new Date().toISOString()
+
+        if (eventType === 'deposit' || eventType === 'borrow' || eventType === 'repay' || eventType === 'withdraw') {
+          parsed.push({
+            id: evt.id,
+            ledger: evt.ledger,
+            type: eventType,
+            user: String(decodedTopics[1]),
+            amount: BigInt(String(decodedValue)),
+            timestamp
+          })
+        } else if (eventType === 'liquidate') {
+          parsed.push({
+            id: evt.id,
+            ledger: evt.ledger,
+            type: 'liquidate',
+            liquidator: String(decodedTopics[1]),
+            borrower: String(decodedTopics[2]),
+            amount: BigInt(String(decodedValue)),
+            timestamp
+          })
+        } else if (eventType === 'price') {
+          parsed.push({
+            id: evt.id,
+            ledger: evt.ledger,
+            type: 'price',
+            price: Number(decodedTopics[1]) / 10_000_000,
+            timestamp
+          })
+        }
+      } catch (err) {
+        console.error('Failed to parse event:', err)
+      }
+    }
+    return parsed.reverse()
+  } catch (err) {
+    console.error('Failed to get events:', err)
+    return []
+  }
+}
+

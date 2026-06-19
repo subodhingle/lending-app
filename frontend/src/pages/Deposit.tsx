@@ -160,9 +160,9 @@ export function Deposit() {
                     </div>
                   </div>
                 )}
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || txStatus === 'loading'}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                  Deposit {COLLATERAL_SYMBOL}
+                  {txStatus === 'loading' ? 'Processing...' : `Deposit ${COLLATERAL_SYMBOL}`}
                 </button>
               </form>
             </div>

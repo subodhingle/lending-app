@@ -313,13 +313,18 @@ export function Liquidate() {
 
                 <button
                   type="submit"
-                  className={`w-full text-white py-3 rounded-xl font-medium transition-colors ${
+                  disabled={txStatus === 'loading'}
+                  className={`w-full text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                     mode === 'flash'
                       ? 'bg-indigo-600 hover:bg-indigo-700'
                       : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
-                  {mode === 'flash' ? '⚡ Flash Liquidate' : 'Liquidate Position'}
+                  {txStatus === 'loading'
+                    ? 'Processing...'
+                    : mode === 'flash'
+                    ? '⚡ Flash Liquidate'
+                    : 'Liquidate Position'}
                 </button>
               </form>
             </div>

@@ -131,9 +131,9 @@ export function Repay() {
                     </div>
                   </div>
                 )}
-                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentDebt === 0n}
+                <button type="submit" disabled={!amount || parseFloat(amount) <= 0 || currentDebt === 0n || txStatus === 'loading'}
                   className="w-full bg-[#141414] text-white py-3 rounded-xl font-medium hover:bg-[#333] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                  Repay {DEBT_SYMBOL}
+                  {txStatus === 'loading' ? 'Processing...' : `Repay ${DEBT_SYMBOL}`}
                 </button>
               </form>
             </div>
