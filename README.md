@@ -39,8 +39,6 @@ The following improvements were made in response to reviewer feedback:
 ### Zero-Capital Flash Liquidation Panel
 ![Liquidate Page](docs/screenshots/liquidate_page.png)
 
-### Dynamic Interaction Walkthrough Demo
-![Walkthrough Demo](docs/screenshots/demo_walkthrough.webp)
 
 ---
 
