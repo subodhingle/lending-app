@@ -1,4 +1,4 @@
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 
 export function WalletConnect() {
   const { address, connected, connecting, connect, disconnect, error } = useWallet()

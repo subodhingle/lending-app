@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import {
@@ -74,7 +74,7 @@ export function Deposit() {
   const currentDebt = details?.debt_borrowed ?? 0n
   const newMaxBorrowable = (newCollateralUsd * 100n) / 150n
 
-  let currentHealth = details?.health_factor ?? 0
+  const currentHealth = details?.health_factor ?? 0
   let newHealthFactor = 0
   if (currentDebt > 0n) {
     newHealthFactor = Number((newCollateralUsd * 100n) / currentDebt)

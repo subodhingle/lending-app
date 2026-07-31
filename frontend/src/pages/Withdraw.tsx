@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import { withdrawCollateral, getPositionDetails, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
@@ -52,7 +52,7 @@ export function Withdraw() {
   const newCollateral = currentCollateral > withdrawAmountRaw ? currentCollateral - withdrawAmountRaw : 0n
   const newCollateralUsd = (newCollateral * price) / 10_000_000n
 
-  let currentHealth = details?.health_factor ?? 0
+  const currentHealth = details?.health_factor ?? 0
   let newHealthFactor = 0
   if (currentDebt > 0n) {
     newHealthFactor = Number((newCollateralUsd * 100n) / currentDebt)

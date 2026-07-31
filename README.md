@@ -186,6 +186,9 @@ The script will:
 | 2 | Health factor goes up to 10000% — should be 0–100 range | Capped gauge display at 300% fill, label shows `999%+` for very safe positions | [`dcab8ba`](https://github.com/subodhingle/lending-app/commit/dcab8ba) |
 | 3 | Home page looks too bland, nothing happening | Added two-column hero with live position preview card, health factor bar, and protocol stats | [`a5ee1e5`](https://github.com/subodhingle/lending-app/commit/a5ee1e5) |
 | 4 | UI feels like a mobile UI on desktop — too much space left/right | Widened all app pages from `max-w-lg` to `max-w-7xl`, added two-column form+explainer layout | [`27b0b56`](https://github.com/subodhingle/lending-app/commit/27b0b56) |
+| 5 | Dashboard data can become stale if the connected wallet changes while requests are loading | Added request cancellation and address-keyed loading state so an older wallet response cannot overwrite the active wallet | Current update |
+| 6 | React Fast Refresh reports a mixed component/hook export boundary | Moved the wallet context and `useWallet` hook into a dedicated module while keeping the provider component isolated | Current update |
+| 7 | Frontend quality audit reports mutable variables that are never reassigned | Replaced the four stale `let` declarations with `const`; frontend lint now passes with zero errors | Current update |
 
 📊 **Feedback log (Google Sheets):** [View spreadsheet](https://docs.google.com/spreadsheets/d/1QFSWXMOvzUQR49S_WdDrzR4t6utEOxseFBiLfJq4UTU/edit?usp=sharing)
 📝 **Submit feedback:** [Google Form](https://forms.gle/PEMVM93nFcWdtDMr6)

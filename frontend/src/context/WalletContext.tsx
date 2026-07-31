@@ -1,23 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { isConnected, getAddress, isAllowed, requestAccess } from '@stellar/freighter-api'
-
-interface WalletContextType {
-  address: string | null
-  connected: boolean
-  connecting: boolean
-  connect: () => Promise<void>
-  disconnect: () => void
-  error: string | null
-}
-
-const WalletContext = createContext<WalletContextType>({
-  address: null,
-  connected: false,
-  connecting: false,
-  connect: async () => {},
-  disconnect: () => {},
-  error: null,
-})
+import { WalletContext } from './wallet-context'
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null)
@@ -95,8 +78,4 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       {children}
     </WalletContext.Provider>
   )
-}
-
-export function useWallet() {
-  return useContext(WalletContext)
 }

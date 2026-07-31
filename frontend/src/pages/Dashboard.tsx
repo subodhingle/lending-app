@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { PositionCard } from '../components/PositionCard'
 import { HealthFactorGauge } from '../components/HealthFactorGauge'
 import { ActivityLog } from '../components/ActivityLog'
@@ -28,11 +28,12 @@ export function Dashboard() {
   const [details, setDetails] = useState<PositionDetails | null>(null)
   const [cBalance, setCBalance] = useState(0n)
   const [dBalance, setDBalance] = useState(0n)
-  const [loading, setLoading] = useState(false)
+  const [loadedAddress, setLoadedAddress] = useState<string | null>(null)
 
   useEffect(() => {
     if (!connected || !address) return
-    setLoading(true)
+    let cancelled = false
+
     Promise.all([
       getPosition(address),
       getHealthFactor(address),
@@ -42,16 +43,25 @@ export function Dashboard() {
       getTokenBalance(CONTRACT_IDS.debtToken, address),
     ])
       .then(([pos, hf, cfg, det, cb, db]) => {
+        if (cancelled) return
         setPosition(pos)
         setHealthFactor(hf)
         setConfig(cfg)
         setDetails(det)
         setCBalance(cb)
         setDBalance(db)
+        setLoadedAddress(address)
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      .catch((error) => {
+        if (!cancelled) console.error(error)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [address, connected])
+
+  const loading = Boolean(connected && address && loadedAddress !== address)
 
   const quickActions = [
     { to: '/app/deposit', label: 'Deposit', icon: '↓', desc: `Add ${COLLATERAL_SYMBOL} collateral` },
