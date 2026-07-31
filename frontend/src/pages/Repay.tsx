@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import { repay, getPositionDetails, getTokenBalance, formatAmount, parseAmount, CONTRACT_IDS, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
@@ -46,7 +46,7 @@ export function Repay() {
   const repayAmountRaw = parseAmount(amount)
   const newDebt = currentDebt > repayAmountRaw ? currentDebt - repayAmountRaw : 0n
 
-  let currentHealth = details?.health_factor ?? 0
+  const currentHealth = details?.health_factor ?? 0
   let newHealthFactor = 0
   if (newDebt > 0n) {
     const collateralUsd = details?.collateral_usd ?? 0n

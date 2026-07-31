@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import { borrow, getPositionDetails, formatAmount, parseAmount, COLLATERAL_SYMBOL, DEBT_SYMBOL, type PositionDetails } from '../lib/ContractInteraction'
@@ -48,7 +48,7 @@ export function Borrow() {
   const newDebt = currentDebt + borrowAmountRaw
   const newUtilizationPct = maxBorrowable > 0n ? Number((newDebt * 100n) / maxBorrowable) : 0
 
-  let currentHealth = details?.health_factor ?? 0
+  const currentHealth = details?.health_factor ?? 0
   let newHealthFactor = 0
   if (newDebt > 0n) {
     newHealthFactor = Number((collateralUsd * 100n) / newDebt)

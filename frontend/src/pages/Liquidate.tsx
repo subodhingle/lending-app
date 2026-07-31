@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWallet } from '../context/WalletContext'
+import { useWallet } from '../context/wallet-context'
 import { TransactionModal } from '../components/TransactionModal'
 import { NotDeployedBanner } from '../components/NotDeployedBanner'
 import {
