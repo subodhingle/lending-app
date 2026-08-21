@@ -18,3 +18,7 @@ frontend/.vercel/
 
 # Test snapshots
 test_snapshots/
+
+# Local artifact build work
+.codex-tmp/
+docs/pitch-deck/*.inspect.ndjson

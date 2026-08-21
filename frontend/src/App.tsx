@@ -8,6 +8,7 @@ import { Borrow } from './pages/Borrow'
 import { Repay } from './pages/Repay'
 import { Withdraw } from './pages/Withdraw'
 import { Liquidate } from './pages/Liquidate'
+import { Onboarding } from './pages/Onboarding'
 
 function App() {
   return (
@@ -63,6 +64,14 @@ function App() {
             element={
               <AppShell>
                 <Liquidate />
+              </AppShell>
+            }
+          />
+          <Route
+            path="/app/onboarding"
+            element={
+              <AppShell>
+                <Onboarding />
               </AppShell>
             }
           />

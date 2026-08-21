@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { WalletConnect } from './WalletConnect'
 
 const navLinks = [
+  { to: '/app/onboarding', label: 'Start here' },
   { to: '/app', label: 'Dashboard' },
   { to: '/app/deposit', label: 'Deposit' },
   { to: '/app/borrow', label: 'Borrow' },

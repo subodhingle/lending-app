@@ -115,10 +115,11 @@ export function Landing() {
               borrow dTOKEN, manage your position — all on-chain, all transparent.
             </p>
             <div className="flex flex-wrap items-center gap-3 fade-up-3">
-              <Link to="/app"
+              <Link to="/app/onboarding"
                 className="bg-[#141414] text-white font-semibold px-6 py-3 rounded-full hover:bg-[#333] transition-colors text-sm">
-                Launch App
+                Start on Testnet
               </Link>
+              <Link to="/app" className="text-sm font-semibold text-[#141414] hover:text-[#6b6b6b] transition-colors">Open dashboard →</Link>
               <a href="#how-it-works"
                 className="border border-[#e2e1d9] text-[#141414] font-medium px-6 py-3 rounded-full hover:bg-white transition-colors text-sm">
                 How it works
@@ -261,13 +262,13 @@ export function Landing() {
           </h2>
           <p className="text-[#9b9b9b] text-base mb-8 max-w-md mx-auto">
             Connect your Freighter wallet and start borrowing in under a minute.
-            No registration. No waiting.
+            A guided Testnet flow keeps the first interaction simple.
           </p>
           <Link
-            to="/app"
+            to="/app/onboarding"
             className="inline-block bg-white text-[#141414] font-bold px-8 py-3.5 rounded-full hover:bg-[#f0f0f0] transition-colors text-sm"
           >
-            Launch App →
+            Start on Testnet →
           </Link>
         </div>
       </section>
