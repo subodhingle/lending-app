@@ -184,12 +184,23 @@ The script will:
 | 2 | Health factor goes up to 10000% — should be 0–100 range | Capped gauge display at 300% fill, label shows `999%+` for very safe positions | [`dcab8ba`](https://github.com/subodhingle/lending-app/commit/dcab8ba) |
 | 3 | Home page looks too bland, nothing happening | Added two-column hero with live position preview card, health factor bar, and protocol stats | [`a5ee1e5`](https://github.com/subodhingle/lending-app/commit/a5ee1e5) |
 | 4 | UI feels like a mobile UI on desktop — too much space left/right | Widened all app pages from `max-w-lg` to `max-w-7xl`, added two-column form+explainer layout | [`27b0b56`](https://github.com/subodhingle/lending-app/commit/27b0b56) |
-| 5 | Dashboard data can become stale if the connected wallet changes while requests are loading | Added request cancellation and address-keyed loading state so an older wallet response cannot overwrite the active wallet | Current update |
-| 6 | React Fast Refresh reports a mixed component/hook export boundary | Moved the wallet context and `useWallet` hook into a dedicated module while keeping the provider component isolated | Current update |
-| 7 | Frontend quality audit reports mutable variables that are never reassigned | Replaced the four stale `let` declarations with `const`; frontend lint now passes with zero errors | Current update |
+| 5 | Dashboard data can become stale if the connected wallet changes while requests are loading | Added request cancellation and address-keyed loading state so an older wallet response cannot overwrite the active wallet | [`60ea916`](https://github.com/subodhingle/lending-app/commit/60ea9161abdcf3719f97b4c9d26f5f2785eb693e) |
+| 6 | React Fast Refresh reports a mixed component/hook export boundary | Moved the wallet context and `useWallet` hook into a dedicated module while keeping the provider component isolated | [`60ea916`](https://github.com/subodhingle/lending-app/commit/60ea9161abdcf3719f97b4c9d26f5f2785eb693e) |
+| 7 | Frontend quality audit reports mutable variables that are never reassigned | Replaced the four stale `let` declarations with `const`; frontend lint now passes with zero errors | [`60ea916`](https://github.com/subodhingle/lending-app/commit/60ea9161abdcf3719f97b4c9d26f5f2785eb693e) |
 
-📊 **Feedback log (Google Sheets):** [View spreadsheet](https://docs.google.com/spreadsheets/d/1QFSWXMOvzUQR49S_WdDrzR4t6utEOxseFBiLfJq4UTU/edit?usp=sharing)
-📝 **Submit feedback:** [Google Form](https://forms.gle/PEMVM93nFcWdtDMr6)
+## Level 5: Growth, evidence and presentation
+
+- **Guided onboarding:** Open [`/app/onboarding`](https://stellar-lending-app.vercel.app/app/onboarding) for the Testnet wallet-to-transaction checklist.
+- **Pitch deck:** [Download the Level 5 pitch deck](docs/pitch-deck/stellar-lending-level5-pitch.pptx).
+- **Demo recording plan:** Follow the [walkthrough script](docs/DEMO_SCRIPT.md) to record a complete Testnet flow.
+- **Interaction evidence:** Use the empty [evidence register](docs/evidence/wallet-interactions.csv) only for confirmed, real Testnet activity. It intentionally contains no invented wallets, transactions, or feedback.
+- **50-wallet cohort:** The project needs 50 different real public wallets, each completing a confirmed transaction with a 2–3 minute interval. The exact collection process is in [Level 5 operations](docs/LEVEL_5.md). This is a target, not a claim of completion.
+
+### Next iteration plan
+
+The next phase focuses on the friction visible in tester feedback: make the first Testnet interaction easier to understand, make safety states clearer, and collect proof that can be independently checked. The new guided onboarding page provides a safe Testnet-first checklist, sends users to the right first action, and explicitly tells testers what public proof to retain. The implementation is tracked in [`fc3b65a`](https://github.com/subodhingle/lending-app/commit/fc3b65a651e258db91040071fb1037267deb7418).
+
+Google Forms and external survey storage are intentionally not used for this iteration. Feedback will be collected directly from participants alongside their opt-in public Testnet address and transaction hash; never collect private keys or seed phrases.
 
 ---
 
@@ -235,8 +246,8 @@ Open [http://localhost:5173](http://localhost:5173)
 
 1. **Install Freighter** — [freighter.app](https://freighter.app) and switch to Testnet
 2. **Connect Wallet** — click "Connect Freighter" in the top-right
-3. **Get test tokens** — run `scripts/deploy.sh` which mints cTOKEN to the deployer
-4. **Deposit** — go to `/deposit`, enter an amount of cTOKEN, approve + deposit
+3. **Get Testnet XLM** — visit [Friendbot](https://friendbot.stellar.org) using your public Testnet address
+4. **Deposit** — go to `/app/deposit`, enter an amount of native XLM, approve + deposit
 5. **Borrow** — go to `/borrow`, borrow up to 66.6% of your collateral value in dTOKEN
 6. **Repay** — go to `/repay`, repay any amount of your dTOKEN debt
 7. **Withdraw** — go to `/withdraw`, withdraw collateral (must stay above 150% ratio)
