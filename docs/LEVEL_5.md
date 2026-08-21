@@ -32,6 +32,8 @@ The CSV is deliberately empty until genuine activity occurs. It is a record-keep
 | First interaction needs more guidance | Added `/app/onboarding` with Testnet safety, funding, proof, and action guidance. |
 | Wallet changes could show stale data | Cancelled stale dashboard requests and tied loading state to the active address. |
 
+The Level 5 onboarding, deck, and evidence workflow implementation is in [`fc3b65a`](https://github.com/subodhingle/lending-app/commit/fc3b65a651e258db91040071fb1037267deb7418).
+
 ## Evidence to attach before submission
 
 - A completed `wallet-interactions.csv` containing 50 verified, unique wallets.

@@ -200,7 +200,7 @@ The script will:
 
 ### Next iteration plan
 
-The next phase focuses on the friction visible in tester feedback: make the first Testnet interaction easier to understand, make safety states clearer, and collect proof that can be independently checked. The new guided onboarding page provides a safe Testnet-first checklist, sends users to the right first action, and explicitly tells testers what public proof to retain. The implementation is tracked in this Level 5 update; its final commit link will be added here when the work is pushed.
+The next phase focuses on the friction visible in tester feedback: make the first Testnet interaction easier to understand, make safety states clearer, and collect proof that can be independently checked. The new guided onboarding page provides a safe Testnet-first checklist, sends users to the right first action, and explicitly tells testers what public proof to retain. The implementation is tracked in [`fc3b65a`](https://github.com/subodhingle/lending-app/commit/fc3b65a651e258db91040071fb1037267deb7418).
 
 Google Forms and external survey storage are intentionally not used for this iteration. Feedback will be collected directly from participants alongside their opt-in public Testnet address and transaction hash; never collect private keys or seed phrases.
 
